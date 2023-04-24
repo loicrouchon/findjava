@@ -71,12 +71,22 @@ func main() {
 		"/usr/lib/jvm",
 		"~/.sdkman/candidates/java",
 	}
+	JvmInfos := loadJvmInfos("./build/jvm-finder.properties")
 	javaPaths := findAllJavaPaths(javaLookUpPaths)
 	jvmInfos := make(map[string]JvmInfo)
+	dirtyCache := false
 	for javaPath, javaSymLinks := range javaPaths {
 		jvmInfo := jvmInfo(javaPath, javaSymLinks)
+		JvmInfos.jvmInfos = append(JvmInfos.jvmInfos, jvmInfo)
+		dirtyCache = true
 		jvmInfos[javaPath] = jvmInfo
 		logDebug("%s: %s", javaPath, jvmInfo)
+	}
+	if dirtyCache {
+		if err := JvmInfos.write(); err != nil {
+			logError("Unable to write to file %s, %s", JvmInfos.path, err)
+
+		}
 	}
 	var matchingJvms []JvmInfo
 	for _, jvmInfo := range jvmInfos {
@@ -218,7 +228,6 @@ func findJavaPaths(javaLookUpPath string) []string {
 			}
 			defer dir.Close()
 
-			// Read the directory contents
 			files, err := dir.Readdir(-1)
 			if err != nil {
 				logError("%s", err)
@@ -296,4 +305,26 @@ func logInfo(message string, v ...any) {
 
 func logError(message string, v ...any) {
 	fmt.Fprintf(os.Stderr, "[ERROR] %s\n", fmt.Sprintf(message, v...))
+}
+
+type JvmInfos struct {
+	path     string
+	jvmInfos []JvmInfo
+}
+
+func loadJvmInfos(path string) JvmInfos {
+	return JvmInfos{path: path}
+}
+
+func (cache JvmInfos) write() error {
+	output := ""
+	for _, jvmInfo := range cache.jvmInfos {
+		output = fmt.Sprintf(`%s
+[%s]
+java.home=%s
+java.specification.version=%d
+`, output, jvmInfo.javaHome, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+	}
+	logInfo(output)
+	return os.WriteFile(cache.path, []byte(output), 0666)
 }
