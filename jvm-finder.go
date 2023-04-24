@@ -15,26 +15,22 @@ import (
 )
 
 type JvmSelectionRules struct {
-	jvmVersionRange string
-	minJvmVersion   int
-	maxJvmVersion   int
+	minJvmVersion int
+	maxJvmVersion int
 }
 
 func (rules JvmSelectionRules) Matches(jvmInfo JvmInfo) bool {
-	return jvmInfo.javaSpecificationVersion >= rules.minJvmVersion &&
-		jvmInfo.javaSpecificationVersion <= rules.maxJvmVersion
+	if rules.minJvmVersion > 0 && rules.minJvmVersion > jvmInfo.javaSpecificationVersion {
+		return false
+	}
+	if rules.maxJvmVersion > 0 && rules.maxJvmVersion < jvmInfo.javaSpecificationVersion {
+		return false
+	}
+	return true
 }
 
 func (rules JvmSelectionRules) String() string {
-	return fmt.Sprintf(
-		`{
-    jvmVersionRange: %s
-    minJvmVersion: %d
-    maxJvmVersion: %d
-}`,
-		rules.jvmVersionRange,
-		rules.minJvmVersion,
-		rules.maxJvmVersion)
+	return fmt.Sprintf("[%d..%d]}", rules.minJvmVersion, rules.maxJvmVersion)
 }
 
 type JvmInfo struct {
@@ -66,39 +62,7 @@ func main() {
 		logError("      - 11..17    From 11 to 17")
 		os.Exit(1)
 	}
-	jvmVersionRange := args[0]
-	logDebug("%s", jvmVersionRange)
-	jvmVersionRegex := `[\d]+(?:\.[\d]+)*`
-	r := regexp.MustCompile(fmt.Sprintf(`^(?:`+
-		`(?P<exact>%[1]s)`+
-		`|(?:(?P<min>%[1]s)\.\.)`+
-		`|(?:\.\.(?P<max>%[1]s))`+
-		`|(?:(?P<min>%[1]s)\.\.(?P<max>%[1]s))`+
-		`)$`,
-		jvmVersionRegex))
-	groupNames := r.SubexpNames()
-	match := r.FindStringSubmatch(jvmVersionRange)
-	var minJvmVersion int
-	var maxJvmVersion int
-	for i, m := range match {
-		if len(m) > 0 {
-			switch groupNames[i] {
-			case "exact":
-				minJvmVersion = parseVersion(m)
-				maxJvmVersion = parseVersion(m)
-			case "min":
-				minJvmVersion = parseVersion(m)
-			case "max":
-				maxJvmVersion = parseVersion(m)
-			}
-		}
-	}
-	rules := JvmSelectionRules{
-		jvmVersionRange: jvmVersionRange,
-		minJvmVersion:   minJvmVersion,
-		maxJvmVersion:   maxJvmVersion,
-	}
-	logDebug("%s", rules)
+	rules := jvmSelectionRules(args)
 
 	var javaLookUpPaths = []string{
 		"/bin/java",
@@ -124,20 +88,61 @@ func main() {
 		}
 	}
 	sort.Slice(matchingJvms[:], func(i, j int) bool {
-        if (matchingJvms[i].javaSpecificationVersion == matchingJvms[j].javaSpecificationVersion) {
-            return matchingJvms[i].javaHome > matchingJvms[j].javaHome
-        }
+		if matchingJvms[i].javaSpecificationVersion == matchingJvms[j].javaSpecificationVersion {
+			return matchingJvms[i].javaHome > matchingJvms[j].javaHome
+		}
 		return matchingJvms[i].javaSpecificationVersion > matchingJvms[j].javaSpecificationVersion
 	})
-    logDebug("%v\n", matchingJvms)
+	logDebug("%v\n", matchingJvms)
 	if matchingJvms != nil && len(matchingJvms) > 0 {
 		selectedJvm := matchingJvms[0]
 		logInfo("[SELECTED]  %s (%d)", selectedJvm.javaHome, selectedJvm.javaSpecificationVersion)
 		fmt.Printf("%s\n", filepath.Join(selectedJvm.javaHome, "bin", "java"))
 	} else {
-		logError("Unable to find a JVM matching requirements")
+		logError("Unable to find a JVM matching requirements %s", rules)
 		os.Exit(1)
 	}
+}
+
+func jvmSelectionRules(args []string) JvmSelectionRules {
+	var rules JvmSelectionRules
+	if len(args) == 1 {
+		jvmVersionRange := args[0]
+		logDebug("%s", jvmVersionRange)
+		jvmVersionRegex := `[\d]+(?:\.[\d]+)*`
+		r := regexp.MustCompile(fmt.Sprintf(`^(?:`+
+			`(?P<exact>%[1]s)`+
+			`|(?:(?P<min>%[1]s)\.\.)`+
+			`|(?:\.\.(?P<max>%[1]s))`+
+			`|(?:(?P<min>%[1]s)\.\.(?P<max>%[1]s))`+
+			`)$`,
+			jvmVersionRegex))
+		groupNames := r.SubexpNames()
+		match := r.FindStringSubmatch(jvmVersionRange)
+		var minJvmVersion int
+		var maxJvmVersion int
+		for i, m := range match {
+			if len(m) > 0 {
+				switch groupNames[i] {
+				case "exact":
+					minJvmVersion = parseVersion(m)
+					maxJvmVersion = parseVersion(m)
+				case "min":
+					minJvmVersion = parseVersion(m)
+				case "max":
+					maxJvmVersion = parseVersion(m)
+				}
+			}
+		}
+		rules = JvmSelectionRules{
+			minJvmVersion: minJvmVersion,
+			maxJvmVersion: maxJvmVersion,
+		}
+	} else {
+		rules = JvmSelectionRules{}
+	}
+	logDebug("%s", rules)
+	return rules
 }
 
 func parseVersion(version string) int {
