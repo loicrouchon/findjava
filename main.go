@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -29,6 +30,7 @@ func (jvmInfo JvmInfo) String() string {
 }
 
 func main() {
+	setLogLevel()
 	var javaLookUpPaths = []string{
 		"/bin/java",
 		"/usr/bin/java",
@@ -41,14 +43,14 @@ func main() {
 	for javaPath, javaSymLinks := range javaPaths {
 		jvmInfo := jvmInfo(javaPath, javaSymLinks)
 		jvmInfos[javaPath] = jvmInfo
-		fmt.Printf("%s: %s\n", javaPath, jvmInfo)
+		logInfo("%s: %s", javaPath, jvmInfo)
 	}
 }
 
 func findAllJavaPaths(javaLookUpPaths []string) map[string][]string {
 	javaPaths := make(map[string][]string)
 	for _, javaLookUpPath := range javaLookUpPaths {
-		fmt.Printf("Checking %s\n", javaLookUpPath)
+		logInfo("Checking %s", javaLookUpPath)
 		if strings.HasPrefix(javaLookUpPath, "~") {
 			usr, err := user.Current()
 			if err != nil {
@@ -56,13 +58,13 @@ func findAllJavaPaths(javaLookUpPaths []string) map[string][]string {
 				os.Exit(1)
 			}
 			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
-            fmt.Printf("Updated lookup path %s\n", javaLookUpPath)
+			logInfo("Updated lookup path %s", javaLookUpPath)
 		}
 		for _, javaPath := range findJavaPaths(javaLookUpPath) {
-			fmt.Printf("  - Found %s\n", javaPath)
+			logInfo("  - Found %s", javaPath)
 			resolvedJavaPath, err := filepath.EvalSymlinks(javaPath)
 			if err != nil {
-				fmt.Printf("%s cannot be resolved %s\n", javaPath, err)
+				logError("%s cannot be resolved %s", javaPath, err)
 				os.Exit(1)
 			}
 			if val, ok := javaPaths[resolvedJavaPath]; ok {
@@ -81,13 +83,13 @@ func findJavaPaths(javaLookUpPath string) []string {
 			if fileInfo.Mode()&0111 != 0 {
 				return []string{javaLookUpPath}
 			} else {
-				fmt.Printf("  File %s is not executable\n", javaLookUpPath)
+				logInfo("  File %s is not executable", javaLookUpPath)
 			}
 		} else {
-			fmt.Printf("  File %s is a directory\n", javaLookUpPath)
+			logInfo("  File %s is a directory", javaLookUpPath)
 			dir, err := os.Open(javaLookUpPath)
 			if err != nil {
-				fmt.Println(err)
+				logError("%s", err)
 				os.Exit(1)
 			}
 			defer dir.Close()
@@ -95,13 +97,13 @@ func findJavaPaths(javaLookUpPath string) []string {
 			// Read the directory contents
 			files, err := dir.Readdir(-1)
 			if err != nil {
-				fmt.Println(err)
+				logError("%s", err)
 				os.Exit(1)
 			}
 			javaPaths := []string{}
 			for _, file := range files {
 				path := filepath.Join(javaLookUpPath, file.Name())
-				fmt.Printf("  Looking into %s\n", path)
+				logInfo("  Looking into %s", path)
 				if file.IsDir() || isSymLink(path) {
 					javaPath := filepath.Join(path, "bin", "java")
 					javaPaths = append(javaPaths, findJavaPaths(javaPath)...)
@@ -124,14 +126,12 @@ func isSymLink(path string) bool {
 
 // parseJavaVersion parses the version and the JDK vendor from the output of "java --version"
 func jvmInfo(javaPath string, javaSymLinks []string) JvmInfo {
-	// find . -mindepth 1 -maxdepth 1 -type d -print -exec {}/bin/java -XshowSettings:properties --version \;
 	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf("Fail to call %s %s\n", javaPath, err)
+		logError("Fail to call %s %s", javaPath, err)
 		os.Exit(1)
 	}
-	// fmt.Printf("%s\n", output)
 	lines := strings.Split(string(output), "\n")
 	var javaSpecificationVersion string
 	var javaHome string
@@ -148,4 +148,24 @@ func jvmInfo(javaPath string, javaSymLinks []string) JvmInfo {
 		javaHome:                 javaHome,
 		javaSpecificationVersion: javaSpecificationVersion,
 	}
+}
+
+var logLevel string
+func setLogLevel() {
+	flag.StringVar(&logLevel, "loglevel", "error", "Log level: info, error")
+	flag.Parse()
+    if (logLevel != "info" && logLevel != "error") {
+		logError("Invalid log level: '%s'. Available levels are: info, error", logLevel)
+        os.Exit(1)
+	}
+}
+
+func logInfo(message string, v ...any) {
+	if logLevel == "info" {
+		fmt.Fprintf(os.Stdout, "[INFO] %s\n", fmt.Sprintf(message, v...))
+	}
+}
+
+func logError(message string, v ...any) {
+	fmt.Fprintf(os.Stderr, "[ERROR] %s\n", fmt.Sprintf(message, v...))
 }
