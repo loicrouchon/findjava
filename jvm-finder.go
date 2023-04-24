@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -34,19 +35,18 @@ func (rules JvmSelectionRules) String() string {
 }
 
 type JvmInfo struct {
-	javaPaths                []string
+	javaPath                 string
 	javaHome                 string
 	javaSpecificationVersion int
 }
 
 func (jvmInfo JvmInfo) String() string {
 	return fmt.Sprintf(
-		`{
-    java: %q
-    java.home: %s
-    java.specification.version: %d
-}`,
-		jvmInfo.javaPaths,
+		`[%s]
+java.home: %s
+java.specification.version: %d
+`,
+		jvmInfo.javaPath,
 		jvmInfo.javaHome,
 		jvmInfo.javaSpecificationVersion)
 }
@@ -71,25 +71,14 @@ func main() {
 		"/usr/lib/jvm",
 		"~/.sdkman/candidates/java",
 	}
-	JvmInfos := loadJvmInfos("./build/jvm-finder.properties")
+	jvmInfos := loadJvmInfos("./build/jvm-finder.properties")
 	javaPaths := findAllJavaPaths(javaLookUpPaths)
-	jvmInfos := make(map[string]JvmInfo)
-	dirtyCache := false
-	for javaPath, javaSymLinks := range javaPaths {
-		jvmInfo := jvmInfo(javaPath, javaSymLinks)
-		JvmInfos.jvmInfos = append(JvmInfos.jvmInfos, jvmInfo)
-		dirtyCache = true
-		jvmInfos[javaPath] = jvmInfo
-		logDebug("%s: %s", javaPath, jvmInfo)
+	for javaPath, _ := range javaPaths {
+		jvmInfos.Fetch(javaPath)
 	}
-	if dirtyCache {
-		if err := JvmInfos.write(); err != nil {
-			logError("Unable to write to file %s, %s", JvmInfos.path, err)
-
-		}
-	}
+	jvmInfos.Save()
 	var matchingJvms []JvmInfo
-	for _, jvmInfo := range jvmInfos {
+	for _, jvmInfo := range jvmInfos.jvmInfos {
 		if rules.Matches(jvmInfo) {
 			matchingJvms = append(matchingJvms, jvmInfo)
 			logInfo("[CANDIDATE] %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
@@ -255,7 +244,7 @@ func isSymLink(path string) bool {
 	return fileInfo.Mode()&os.ModeSymlink != 0
 }
 
-func jvmInfo(javaPath string, javaSymLinks []string) JvmInfo {
+func jvmInfo(javaPath string) JvmInfo {
 	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -274,7 +263,7 @@ func jvmInfo(javaPath string, javaSymLinks []string) JvmInfo {
 		}
 	}
 	return JvmInfo{
-		javaPaths:                javaSymLinks,
+		javaPath:                 javaPath,
 		javaHome:                 javaHome,
 		javaSpecificationVersion: parseVersion(javaSpecificationVersion),
 	}
@@ -308,23 +297,77 @@ func logError(message string, v ...any) {
 }
 
 type JvmInfos struct {
-	path     string
-	jvmInfos []JvmInfo
+	path       string
+	jvmInfos   map[string]JvmInfo
+	dirtyCache bool
 }
 
 func loadJvmInfos(path string) JvmInfos {
-	return JvmInfos{path: path}
+	infos := make(map[string]JvmInfo)
+	if _, err := os.Stat(path); err == nil {
+		file, err := os.Open(path)
+		if err != nil {
+			logError("Unable to read file %s: %s", path, err)
+		}
+		defer file.Close()
+
+		var jvmInfo JvmInfo
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if value, found := strings.CutPrefix(line, "["); found {
+				if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
+					infos[jvmInfo.javaPath] = jvmInfo
+				}
+				jvmInfo = JvmInfo{javaPath: strings.Trim(value, "[]")}
+			} else if value, ok := strings.CutPrefix(line, "java.home="); ok {
+				jvmInfo.javaHome = value
+			} else if value, ok := strings.CutPrefix(line, "java.specification.version="); ok {
+				if version, err := strconv.Atoi(value); err == nil {
+					jvmInfo.javaSpecificationVersion = version
+				}
+			}
+		}
+		if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
+			infos[jvmInfo.javaPath] = jvmInfo
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+	}
+	return JvmInfos{
+		path:       path,
+		jvmInfos:   infos,
+		dirtyCache: false,
+	}
 }
 
-func (cache JvmInfos) write() error {
-	output := ""
-	for _, jvmInfo := range cache.jvmInfos {
-		output = fmt.Sprintf(`%s
+func (cache *JvmInfos) Fetch(javaPath string) {
+	if _, found := cache.jvmInfos[javaPath]; !found {
+		logInfo("[CACHE MISS] %s", javaPath)
+		jvmInfo := jvmInfo(javaPath)
+		cache.jvmInfos[javaPath] = jvmInfo
+		cache.dirtyCache = true
+		logDebug("%s: %s", javaPath, jvmInfo)
+	}
+}
+
+func (cache *JvmInfos) Save() {
+	if cache.dirtyCache {
+		fmt.Printf("Saving %s\n", cache.path)
+		output := ""
+		for _, jvmInfo := range cache.jvmInfos {
+			output = fmt.Sprintf(`%s
 [%s]
 java.home=%s
 java.specification.version=%d
-`, output, jvmInfo.javaHome, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+`, output, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+		}
+		logInfo(output)
+		if err := os.WriteFile(cache.path, []byte(output), 0666); err != nil {
+			logError("Unable to write to file %s, %s", cache.path, err)
+			os.Exit(1)
+		}
 	}
-	logInfo(output)
-	return os.WriteFile(cache.path, []byte(output), 0666)
 }
