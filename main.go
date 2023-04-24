@@ -14,19 +14,19 @@ import (
 )
 
 type JvmSelectionRules struct {
-	versionRange  string
-	minJvmVersion int
-	maxJvmVersion int
+	jvmVersionRange string
+	minJvmVersion   int
+	maxJvmVersion   int
 }
 
 func (rules JvmSelectionRules) String() string {
 	return fmt.Sprintf(
 		`{
-            versionRange: %s
-            minJvmVersion: %d
-            maxJvmVersion: %d
+    jvmVersionRange: %s
+    minJvmVersion: %d
+    maxJvmVersion: %d
 }`,
-		rules.versionRange,
+		rules.jvmVersionRange,
 		rules.minJvmVersion,
 		rules.maxJvmVersion)
 }
@@ -71,35 +71,28 @@ func main() {
 		`)$`,
 		jvmVersionRegex))
 	groupNames := r.SubexpNames()
-	for _, input := range []string{
-		"1.8",
-		"..1.8",
-		"1.8..",
-		"1.8..17",
-	} {
-		match := r.FindStringSubmatch(input)
-		var minJvmVersion int
-		var maxJvmVersion int
-		for i, m := range match {
-			if len(m) > 0 {
-				switch groupNames[i] {
-				case "exact":
-					minJvmVersion = parseVersion(m)
-					maxJvmVersion = parseVersion(m)
-				case "min":
-					minJvmVersion = parseVersion(m)
-				case "max":
-					maxJvmVersion = parseVersion(m)
-				}
+	match := r.FindStringSubmatch(jvmVersionRange)
+	var minJvmVersion int
+	var maxJvmVersion int
+	for i, m := range match {
+		if len(m) > 0 {
+			switch groupNames[i] {
+			case "exact":
+				minJvmVersion = parseVersion(m)
+				maxJvmVersion = parseVersion(m)
+			case "min":
+				minJvmVersion = parseVersion(m)
+			case "max":
+				maxJvmVersion = parseVersion(m)
 			}
 		}
-		rules := JvmSelectionRules{
-			versionRange:  input,
-			minJvmVersion: minJvmVersion,
-			maxJvmVersion: maxJvmVersion,
-		}
-		logInfo("%s", rules)
 	}
+	rules := JvmSelectionRules{
+		jvmVersionRange: jvmVersionRange,
+		minJvmVersion:   minJvmVersion,
+		maxJvmVersion:   maxJvmVersion,
+	}
+	logInfo("%s", rules)
 
 	var javaLookUpPaths = []string{
 		"/bin/java",
@@ -148,16 +141,15 @@ func parseVersion(version string) int {
 func findAllJavaPaths(javaLookUpPaths []string) map[string][]string {
 	javaPaths := make(map[string][]string)
 	for _, javaLookUpPath := range javaLookUpPaths {
-		logInfo("Checking %s", javaLookUpPath)
-		if strings.HasPrefix(javaLookUpPath, "~") {
-			usr, err := user.Current()
+        if strings.HasPrefix(javaLookUpPath, "~") {
+            usr, err := user.Current()
 			if err != nil {
-				log.Fatal(err)
+                log.Fatal(err)
 				os.Exit(1)
 			}
 			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
-			logInfo("Updated lookup path %s", javaLookUpPath)
 		}
+        logInfo("Checking %s", javaLookUpPath)
 		for _, javaPath := range findJavaPaths(javaLookUpPath) {
 			logInfo("  - Found %s", javaPath)
 			resolvedJavaPath, err := filepath.EvalSymlinks(javaPath)
@@ -184,7 +176,6 @@ func findJavaPaths(javaLookUpPath string) []string {
 				logInfo("  File %s is not executable", javaLookUpPath)
 			}
 		} else {
-			logInfo("  File %s is a directory", javaLookUpPath)
 			dir, err := os.Open(javaLookUpPath)
 			if err != nil {
 				logError("%s", err)
@@ -201,7 +192,6 @@ func findJavaPaths(javaLookUpPath string) []string {
 			javaPaths := []string{}
 			for _, file := range files {
 				path := filepath.Join(javaLookUpPath, file.Name())
-				logInfo("  Looking into %s", path)
 				if file.IsDir() || isSymLink(path) {
 					javaPath := filepath.Join(path, "bin", "java")
 					javaPaths = append(javaPaths, findJavaPaths(javaPath)...)
@@ -213,7 +203,6 @@ func findJavaPaths(javaLookUpPath string) []string {
 	return []string{}
 }
 
-// isSymLink checks if the given path is a symbolic link
 func isSymLink(path string) bool {
 	fileInfo, err := os.Lstat(path)
 	if err != nil {
@@ -222,7 +211,6 @@ func isSymLink(path string) bool {
 	return fileInfo.Mode()&os.ModeSymlink != 0
 }
 
-// parseJavaVersion parses the version and the JDK vendor from the output of "java --version"
 func jvmInfo(javaPath string, javaSymLinks []string) JvmInfo {
 	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
 	output, err := cmd.CombinedOutput()
