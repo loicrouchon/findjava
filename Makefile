@@ -14,7 +14,7 @@ $(JAVA_INFO): JvmInfo.java
 
 $(MAIN_PROGRAM): main.go
 	@mkdir -p "$(GO_BUILD_DIR)"
-	go build -ldflags "-w" -o "$(MAIN_PROGRAM)" main.go
+	go build -ldflags "-s -w" -o "$(MAIN_PROGRAM)" main.go
 
 clean:
 	rm  -rf "$(BUILD_DIR)"

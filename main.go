@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 )
@@ -46,7 +48,18 @@ func main() {
 func findAllJavaPaths(javaLookUpPaths []string) map[string][]string {
 	javaPaths := make(map[string][]string)
 	for _, javaLookUpPath := range javaLookUpPaths {
+		fmt.Printf("Checking %s\n", javaLookUpPath)
+		if strings.HasPrefix(javaLookUpPath, "~") {
+			usr, err := user.Current()
+			if err != nil {
+				log.Fatal(err)
+				os.Exit(1)
+			}
+			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
+            fmt.Printf("Updated lookup path %s\n", javaLookUpPath)
+		}
 		for _, javaPath := range findJavaPaths(javaLookUpPath) {
+			fmt.Printf("  - Found %s\n", javaPath)
 			resolvedJavaPath, err := filepath.EvalSymlinks(javaPath)
 			if err != nil {
 				fmt.Printf("%s cannot be resolved %s\n", javaPath, err)
@@ -68,47 +81,33 @@ func findJavaPaths(javaLookUpPath string) []string {
 			if fileInfo.Mode()&0111 != 0 {
 				return []string{javaLookUpPath}
 			} else {
-				fmt.Printf("File %s is not executable\n", javaLookUpPath)
+				fmt.Printf("  File %s is not executable\n", javaLookUpPath)
 			}
 		} else {
-			fmt.Printf("File %s is a directory\n", javaLookUpPath)
+			fmt.Printf("  File %s is a directory\n", javaLookUpPath)
+			dir, err := os.Open(javaLookUpPath)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			defer dir.Close()
 
-			// path := filepath.Join(javaLookUpPath, "bin", "java")
-			// every single subdir
-
-			// dir, err := os.Open(dirpath)
-			// if err != nil {
-			// 	fmt.Println(err)
-			// 	return
-			// }
-			// defer dir.Close()
-
-			// // Read the directory contents
-			// files, err := dir.Readdir(-1)
-			// if err != nil {
-			// 	fmt.Println(err)
-			// 	return
-			// }
-
-			// 	// If the path is a directory and not a symbolic link
-			// 	if file.IsDir() { // && !isSymLink(path) {
-			// 		path := filepath.Join(dirpath, file.Name())
-			// 		// Resolve any potential symbolic links in the path
-			// 		resolvedPath, err := filepath.EvalSymlinks(path)
-			// 		if err != nil {
-			// 			fmt.Printf("%s cannot be resolved %s\n", path, err)
-			// 			os.Exit(1)
-			// 		}
-
-			// 		// Execute "$DIR/bin/java --version" in the resolved path
-			// 		javaPath := filepath.Join(jvmPath, "bin", "java")
-
-			// 	}
-			// }
-
-			// if err != nil {
-			// 	fmt.Println(err)
-			// }
+			// Read the directory contents
+			files, err := dir.Readdir(-1)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			javaPaths := []string{}
+			for _, file := range files {
+				path := filepath.Join(javaLookUpPath, file.Name())
+				fmt.Printf("  Looking into %s\n", path)
+				if file.IsDir() || isSymLink(path) {
+					javaPath := filepath.Join(path, "bin", "java")
+					javaPaths = append(javaPaths, findJavaPaths(javaPath)...)
+				}
+			}
+			return javaPaths
 		}
 	}
 	return []string{}
