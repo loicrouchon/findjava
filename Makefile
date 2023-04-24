@@ -10,14 +10,14 @@ build: $(JAVA_INFO) $(MAIN_PROGRAM)
 
 $(JAVA_INFO): JvmInfo.java
 	@mkdir -p "$(JAVA_BUILD_DIR)"
-	javac --release 8 -d "$(JAVA_BUILD_DIR)" JvmInfo.java
+	@javac --release 8 -d "$(JAVA_BUILD_DIR)" JvmInfo.java
 
-$(MAIN_PROGRAM): jvm-finder.go
+$(MAIN_PROGRAM): jvm-finder
 	@mkdir -p "$(GO_BUILD_DIR)"
-	go build -ldflags "-s -w" -o "$(MAIN_PROGRAM)" jvm-finder.go
+	@cd jvm-finder && go build -ldflags "-s -w" -o "../$(MAIN_PROGRAM)" jvm-finder
 
 clean:
 	@rm  -rf "$(BUILD_DIR)"
 
 run: $(JAVA_INFO)
-	@go run jvm-finder.go
+	@cd jvm-finder && go run jvm-finder
