@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -17,6 +18,11 @@ type JvmSelectionRules struct {
 	jvmVersionRange string
 	minJvmVersion   int
 	maxJvmVersion   int
+}
+
+func (rules JvmSelectionRules) Matches(jvmInfo JvmInfo) bool {
+	return jvmInfo.javaSpecificationVersion >= rules.minJvmVersion &&
+		jvmInfo.javaSpecificationVersion <= rules.maxJvmVersion
 }
 
 func (rules JvmSelectionRules) String() string {
@@ -34,7 +40,7 @@ func (rules JvmSelectionRules) String() string {
 type JvmInfo struct {
 	javaPaths                []string
 	javaHome                 string
-	javaSpecificationVersion string
+	javaSpecificationVersion int
 }
 
 func (jvmInfo JvmInfo) String() string {
@@ -42,7 +48,7 @@ func (jvmInfo JvmInfo) String() string {
 		`{
     java: %q
     java.home: %s
-    java.specification.version: %s
+    java.specification.version: %d
 }`,
 		jvmInfo.javaPaths,
 		jvmInfo.javaHome,
@@ -61,7 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 	jvmVersionRange := args[0]
-	logInfo("%s", jvmVersionRange)
+	logDebug("%s", jvmVersionRange)
 	jvmVersionRegex := `[\d]+(?:\.[\d]+)*`
 	r := regexp.MustCompile(fmt.Sprintf(`^(?:`+
 		`(?P<exact>%[1]s)`+
@@ -92,7 +98,7 @@ func main() {
 		minJvmVersion:   minJvmVersion,
 		maxJvmVersion:   maxJvmVersion,
 	}
-	logInfo("%s", rules)
+	logDebug("%s", rules)
 
 	var javaLookUpPaths = []string{
 		"/bin/java",
@@ -106,7 +112,31 @@ func main() {
 	for javaPath, javaSymLinks := range javaPaths {
 		jvmInfo := jvmInfo(javaPath, javaSymLinks)
 		jvmInfos[javaPath] = jvmInfo
-		logInfo("%s: %s", javaPath, jvmInfo)
+		logDebug("%s: %s", javaPath, jvmInfo)
+	}
+	var matchingJvms []JvmInfo
+	for _, jvmInfo := range jvmInfos {
+		if rules.Matches(jvmInfo) {
+			matchingJvms = append(matchingJvms, jvmInfo)
+			logInfo("[CANDIDATE] %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+		} else {
+			logInfo("[IGNORED]   %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+		}
+	}
+	sort.Slice(matchingJvms[:], func(i, j int) bool {
+        if (matchingJvms[i].javaSpecificationVersion == matchingJvms[j].javaSpecificationVersion) {
+            return matchingJvms[i].javaHome > matchingJvms[j].javaHome
+        }
+		return matchingJvms[i].javaSpecificationVersion > matchingJvms[j].javaSpecificationVersion
+	})
+    logDebug("%v\n", matchingJvms)
+	if matchingJvms != nil && len(matchingJvms) > 0 {
+		selectedJvm := matchingJvms[0]
+		logInfo("[SELECTED]  %s (%d)", selectedJvm.javaHome, selectedJvm.javaSpecificationVersion)
+		fmt.Printf("%s\n", filepath.Join(selectedJvm.javaHome, "bin", "java"))
+	} else {
+		logError("Unable to find a JVM matching requirements")
+		os.Exit(1)
 	}
 }
 
@@ -141,17 +171,17 @@ func parseVersion(version string) int {
 func findAllJavaPaths(javaLookUpPaths []string) map[string][]string {
 	javaPaths := make(map[string][]string)
 	for _, javaLookUpPath := range javaLookUpPaths {
-        if strings.HasPrefix(javaLookUpPath, "~") {
-            usr, err := user.Current()
+		if strings.HasPrefix(javaLookUpPath, "~") {
+			usr, err := user.Current()
 			if err != nil {
-                log.Fatal(err)
+				log.Fatal(err)
 				os.Exit(1)
 			}
 			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
 		}
-        logInfo("Checking %s", javaLookUpPath)
+		logDebug("Checking %s", javaLookUpPath)
 		for _, javaPath := range findJavaPaths(javaLookUpPath) {
-			logInfo("  - Found %s", javaPath)
+			logDebug("  - Found %s", javaPath)
 			resolvedJavaPath, err := filepath.EvalSymlinks(javaPath)
 			if err != nil {
 				logError("%s cannot be resolved %s", javaPath, err)
@@ -173,7 +203,7 @@ func findJavaPaths(javaLookUpPath string) []string {
 			if fileInfo.Mode()&0111 != 0 {
 				return []string{javaLookUpPath}
 			} else {
-				logInfo("  File %s is not executable", javaLookUpPath)
+				logDebug("  File %s is not executable", javaLookUpPath)
 			}
 		} else {
 			dir, err := os.Open(javaLookUpPath)
@@ -232,24 +262,29 @@ func jvmInfo(javaPath string, javaSymLinks []string) JvmInfo {
 	return JvmInfo{
 		javaPaths:                javaSymLinks,
 		javaHome:                 javaHome,
-		javaSpecificationVersion: javaSpecificationVersion,
+		javaSpecificationVersion: parseVersion(javaSpecificationVersion),
 	}
 }
 
 var logLevel string
 
 func parseArgs() []string {
-	flag.StringVar(&logLevel, "loglevel", "error", "Log level: info, error")
+	flag.StringVar(&logLevel, "loglevel", "error", "Log level: debug, info, error")
 	flag.Parse()
-	if logLevel != "info" && logLevel != "error" {
-		logError("Invalid log level: '%s'. Available levels are: info, error", logLevel)
+	if logLevel != "debug" && logLevel != "info" && logLevel != "error" {
+		logError("Invalid log level: '%s'. Available levels are: debug, info, error", logLevel)
 		os.Exit(1)
 	}
 	return flag.Args()
 }
 
+func logDebug(message string, v ...any) {
+	if logLevel == "debug" {
+		fmt.Fprintf(os.Stdout, "[DEBUG] %s\n", fmt.Sprintf(message, v...))
+	}
+}
 func logInfo(message string, v ...any) {
-	if logLevel == "info" {
+	if logLevel == "debug" || logLevel == "info" {
 		fmt.Fprintf(os.Stdout, "[INFO] %s\n", fmt.Sprintf(message, v...))
 	}
 }
