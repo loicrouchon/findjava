@@ -30,8 +30,7 @@ func main() {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)
 		fmt.Printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
 	} else {
-		logError("Unable to find a JVM matching requirements %s", rules)
-		os.Exit(1)
+		die("Unable to find a JVM matching requirements %s", rules)
 	}
 }
 
@@ -40,8 +39,7 @@ func parseArgs() []string {
 	flag.StringVar(&logLevel, "loglevel", "error", "Log level: debug, info, error")
 	flag.Parse()
 	if err := setLogLevel(logLevel); err != nil {
-		logErr(err)
-		os.Exit(1)
+		dierr(err)
 	}
 	return flag.Args()
 }

@@ -71,7 +71,7 @@ func loadJvmInfos(path string, javaPaths *JavaExecutables) JvmInfos {
 		}
 
 		if err := scanner.Err(); err != nil {
-			logError("error", err)
+			logErr(err)
 		}
 	}
 	jvmInfos := JvmInfos{
@@ -114,8 +114,7 @@ func fetchJvmInfo(javaPath string) JvmInfo {
 	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logError("Fail to call %s %s", javaPath, err)
-		os.Exit(1)
+		die("Fail to call %s %s", javaPath, err)
 	}
 	lines := strings.Split(string(output), "\n")
 	var javaSpecificationVersion string
@@ -158,8 +157,7 @@ java.specification.version=%d
 		}
 		logDebug(output)
 		if err := os.WriteFile(cache.path, []byte(output), 0666); err != nil {
-			logError("Unable to write to file %s, %s", cache.path, err)
-			os.Exit(1)
+			die("Unable to write to file %s, %s", cache.path, err)
 		}
 	}
 }

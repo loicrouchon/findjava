@@ -25,8 +25,7 @@ func parseVersion(version string) int {
 	default:
 		v, err := strconv.Atoi(version)
 		if err != nil {
-			logError("JVM version %s cannot be parsed as an int")
-			panic(version)
+			die("JVM version %s cannot be parsed as an int", version)
 		}
 		return v
 	}

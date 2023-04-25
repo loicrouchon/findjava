@@ -24,8 +24,7 @@ func findAllJavaExecutables(javaLookUpPaths []string) JavaExecutables {
 		if strings.HasPrefix(javaLookUpPath, "~") {
 			usr, err := user.Current()
 			if err != nil {
-				logError("Unable to resolve user home directory used in path %s: %s", javaLookUpPath, err)
-				os.Exit(1)
+				die("Unable to resolve user home directory used in path %s: %s", javaLookUpPath, err)
 			}
 			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
 		}
@@ -67,15 +66,13 @@ func javaExecutable(path string, fileInfo fs.FileInfo) []JavaExecutable {
 func javaExecutablesForEachJvmDirectory(directory string) []JavaExecutable {
 	dir, err := os.Open(directory)
 	if err != nil {
-		logError("%s", err)
-		os.Exit(1)
+		dierr(err)
 	}
 	defer dir.Close()
 
 	files, err := dir.Readdir(-1)
 	if err != nil {
-		logError("%s", err)
-		os.Exit(1)
+		dierr(err)
 	}
 	javaPaths := []JavaExecutable{}
 	for _, file := range files {

@@ -48,3 +48,13 @@ func logErr(err error) {
 		fmt.Fprintf(os.Stderr, "[ERROR] %s\n", err)
 	}
 }
+
+func die(message string, v ...any) {
+	logError(message, v...)
+	os.Exit(1)
+}
+
+func dierr(err error) {
+	logErr(err)
+	os.Exit(1)
+}
