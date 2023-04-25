@@ -12,7 +12,7 @@ $(JAVA_INFO): JvmInfo.java
 	@mkdir -p "$(JAVA_BUILD_DIR)"
 	@javac --release 8 -d "$(JAVA_BUILD_DIR)" JvmInfo.java
 
-$(MAIN_PROGRAM): jvm-finder
+$(MAIN_PROGRAM): jvm-finder/*.go
 	@mkdir -p "$(GO_BUILD_DIR)"
 	@cd jvm-finder && go build -ldflags "-s -w" -o "../$(MAIN_PROGRAM)" jvm-finder
 
