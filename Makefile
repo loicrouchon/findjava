@@ -1,4 +1,4 @@
-.PHONY: build format clean run
+.PHONY: build test format clean run
 
 BUILD_DIR=build
 JAVA_BUILD_DIR=$(BUILD_DIR)/classes
@@ -7,6 +7,10 @@ GO_BUILD_DIR=$(BUILD_DIR)/go
 MAIN_PROGRAM=$(GO_BUILD_DIR)/jvm-finder
 
 build: $(JAVA_INFO) $(MAIN_PROGRAM)
+
+test: $(JAVA_INFO)
+	@cd jvm-finder && go test
+
 
 $(JAVA_INFO): JvmInfo.java
 	@mkdir -p "$(JAVA_BUILD_DIR)"
