@@ -35,12 +35,11 @@ func (rules JvmSelectionRules) String() string {
 }
 
 // TODO rules could also be read from a system wide config file
-func jvmSelectionRules(args []string) *JvmSelectionRules {
+func jvmSelectionRules(jvmVersionRange *string) *JvmSelectionRules {
 	var rules *JvmSelectionRules
-	if len(args) == 1 {
-		jvmVersionRange := args[0]
-		logDebug("%s", jvmVersionRange)
-		match := r.FindStringSubmatch(jvmVersionRange)
+	if jvmVersionRange != nil {
+		logDebug("%s", *jvmVersionRange)
+		match := r.FindStringSubmatch(*jvmVersionRange)
 		if len(match) <= 0 {
 			return nil
 		}

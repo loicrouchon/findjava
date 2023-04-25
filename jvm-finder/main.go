@@ -9,8 +9,10 @@ import (
 
 // TODO add lookup in JAVA_HOME env var too
 // TODO instead of a harcoded list, could also look for
-//    all $DIR/java where $DIR are the individual $PATH entries
-//    plus the current directory
+//
+//	all $DIR/java where $DIR are the individual $PATH entries
+//	plus the current directory
+//
 // TODO this list could also come from a system-wide config file
 var javaLookUpPaths = []string{
 	"/bin/java",
@@ -21,13 +23,17 @@ var javaLookUpPaths = []string{
 }
 
 func main() {
+	var rules *JvmSelectionRules
 	args := parseArgs()
 	if len(args) > 1 {
 		Usage()
-	}
-	rules := jvmSelectionRules(args)
-	if rules == nil {
-		Usage()
+	} else if len(args) == 1 {
+		rules = jvmSelectionRules(&args[0])
+		if rules == nil {
+			Usage()
+		}
+	} else {
+		rules = jvmSelectionRules(nil)
 	}
 	javaExecutables := findAllJavaExecutables(javaLookUpPaths)
 	jvmInfos := loadJvmInfos("./build/jvm-finder.properties", &javaExecutables)

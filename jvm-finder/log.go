@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-const logLevelDebug = 1
-const logLevelInfo = 2
-const logLevelError = 3
+const logLevelDebug = 2
+const logLevelInfo = 1
+const logLevelError = 0
 
 var currentLogLevel int
 
@@ -27,18 +27,18 @@ func setLogLevel(level string) error {
 }
 
 func logDebug(message string, v ...any) {
-	if currentLogLevel <= logLevelDebug {
+	if currentLogLevel >= logLevelDebug {
 		fmt.Fprintf(os.Stdout, "[DEBUG] %s\n", fmt.Sprintf(message, v...))
 	}
 }
 func logInfo(message string, v ...any) {
-	if currentLogLevel <= logLevelInfo {
+	if currentLogLevel >= logLevelInfo {
 		fmt.Fprintf(os.Stdout, "[INFO] %s\n", fmt.Sprintf(message, v...))
 	}
 }
 
 func logError(message string, v ...any) {
-	if currentLogLevel <= logLevelError {
+	if currentLogLevel >= logLevelError {
 		fmt.Fprintf(os.Stderr, "[ERROR] %s\n", fmt.Sprintf(message, v...))
 	}
 }
