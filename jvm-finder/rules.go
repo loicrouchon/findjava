@@ -34,6 +34,7 @@ func (rules JvmSelectionRules) String() string {
 	return fmt.Sprintf("[%d..%d]}", rules.minJvmVersion, rules.maxJvmVersion)
 }
 
+// TODO rules could also be read from a system wide config file
 func jvmSelectionRules(args []string) *JvmSelectionRules {
 	var rules *JvmSelectionRules
 	if len(args) == 1 {
