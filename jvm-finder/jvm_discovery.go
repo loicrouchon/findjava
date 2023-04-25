@@ -5,10 +5,20 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
-func findAllJavaPaths(javaLookUpPaths []string) []string {
-	javaPaths := make(map[string][]string)
+type JavaExecutables struct {
+	javaPaths map[string]time.Time
+}
+
+type JavaExecutable struct {
+	path      string
+	timestamp time.Time
+}
+
+func findAllJavaPaths(javaLookUpPaths []string) JavaExecutables {
+	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range javaLookUpPaths {
 		if strings.HasPrefix(javaLookUpPath, "~") {
 			usr, err := user.Current()
@@ -19,33 +29,27 @@ func findAllJavaPaths(javaLookUpPaths []string) []string {
 			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
 		}
 		logDebug("Checking %s", javaLookUpPath)
-		for _, javaPath := range findJavaPaths(javaLookUpPath) {
-			logDebug("  - Found %s", javaPath)
-			resolvedJavaPath, err := filepath.EvalSymlinks(javaPath)
+		for _, java := range findJavaPaths(javaLookUpPath) {
+			logDebug("  - Found %s", java)
+			resolvedJavaPath, err := filepath.EvalSymlinks(java.path)
 			if err != nil {
-				logError("%s cannot be resolved %s", javaPath, err)
+				logError("%s cannot be resolved %s", java, err)
 				os.Exit(1)
 			}
-			if val, ok := javaPaths[resolvedJavaPath]; ok {
-				javaPaths[resolvedJavaPath] = append(val, javaPath)
-			} else {
-				javaPaths[resolvedJavaPath] = []string{javaPath}
-			}
+			javaPaths[resolvedJavaPath] = java.timestamp
 		}
 	}
-	resolvedPaths := make([]string, 0, len(javaPaths))
-	for path := range javaPaths {
-		resolvedPaths = append(resolvedPaths, path)
-	}
-
-	return resolvedPaths
+	return JavaExecutables{javaPaths: javaPaths}
 }
 
-func findJavaPaths(javaLookUpPath string) []string {
+func findJavaPaths(javaLookUpPath string) []JavaExecutable {
 	if fileInfo, err := os.Stat(javaLookUpPath); err == nil {
 		if !fileInfo.IsDir() {
 			if fileInfo.Mode()&0111 != 0 {
-				return []string{javaLookUpPath}
+				return []JavaExecutable{JavaExecutable{
+					path:      javaLookUpPath,
+					timestamp: fileInfo.ModTime(),
+				}}
 			} else {
 				logDebug("  File %s is not executable", javaLookUpPath)
 			}
@@ -62,7 +66,7 @@ func findJavaPaths(javaLookUpPath string) []string {
 				logError("%s", err)
 				os.Exit(1)
 			}
-			javaPaths := []string{}
+			javaPaths := []JavaExecutable{}
 			for _, file := range files {
 				path := filepath.Join(javaLookUpPath, file.Name())
 				if file.IsDir() || isSymLink(path) {
@@ -73,7 +77,7 @@ func findJavaPaths(javaLookUpPath string) []string {
 			return javaPaths
 		}
 	}
-	return []string{}
+	return []JavaExecutable{}
 }
 
 func isSymLink(path string) bool {

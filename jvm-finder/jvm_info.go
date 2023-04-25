@@ -35,7 +35,7 @@ java.specification.version: %d
 		jvmInfo.javaSpecificationVersion)
 }
 
-func loadJvmInfos(path string, javaPaths []string) JvmInfos {
+func loadJvmInfos(path string, javaPaths *JavaExecutables) JvmInfos {
 	var timestamp time.Time
 	infos := make(map[string]JvmInfo)
 	if fileinfo, err := os.Stat(path); err == nil {
@@ -81,19 +81,19 @@ func loadJvmInfos(path string, javaPaths []string) JvmInfos {
 		dirtyCache: false,
 	}
 
-	for _, javaPath := range javaPaths {
-		jvmInfos.Fetch(javaPath)
+	for javaPath, modTime := range javaPaths.javaPaths {
+		jvmInfos.Fetch(javaPath, modTime)
 	}
 	jvmInfos.Save()
 	return jvmInfos
 }
 
-func (jvmInfos *JvmInfos) Fetch(javaPath string) {
+func (jvmInfos *JvmInfos) Fetch(javaPath string, modTime time.Time) {
 	var jvmInfo JvmInfo
 	if info, found := jvmInfos.jvmInfos[javaPath]; !found {
 		logInfo("[CACHE MISS] %s", javaPath)
 		jvmInfo = jvmInfos.doFetch(javaPath)
-	} else if javaFileInfo, _ := os.Stat(javaPath); javaFileInfo.ModTime().After(jvmInfos.timestamp) {
+	} else if modTime.After(jvmInfos.timestamp) {
 		logInfo("[CACHE OUTDATED] %s", javaPath)
 		jvmInfo = jvmInfos.doFetch(javaPath)
 	} else {

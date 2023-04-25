@@ -27,8 +27,8 @@ func main() {
 		os.Exit(1)
 	}
 	rules := jvmSelectionRules(args)
-	javaPaths := findAllJavaPaths(javaLookUpPaths)
-	jvmInfos := loadJvmInfos("./build/jvm-finder.properties", javaPaths)
+	javaExecutables := findAllJavaPaths(javaLookUpPaths)
+	jvmInfos := loadJvmInfos("./build/jvm-finder.properties", &javaExecutables)
 	if jvm, found := jvmInfos.Select(rules); found {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)
 		fmt.Printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
