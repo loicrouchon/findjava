@@ -10,7 +10,7 @@ type JvmSelectionRules struct {
 	maxJvmVersion int
 }
 
-func (rules JvmSelectionRules) Matches(jvmInfo JvmInfo) bool {
+func (rules JvmSelectionRules) Matches(jvmInfo *JvmInfo) bool {
 	if rules.minJvmVersion > 0 && rules.minJvmVersion > jvmInfo.javaSpecificationVersion {
 		return false
 	}

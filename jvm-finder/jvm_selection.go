@@ -7,7 +7,7 @@ import (
 func (jvmInfos *JvmInfos) Select(rules *JvmSelectionRules) (*JvmInfo, bool) {
 	var matchingJvms []JvmInfo
 	for _, jvmInfo := range jvmInfos.jvmInfos {
-		if rules.Matches(jvmInfo) {
+		if rules.Matches(&jvmInfo) {
 			matchingJvms = append(matchingJvms, jvmInfo)
 			logInfo("[CANDIDATE] %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
 		} else {

@@ -1,4 +1,4 @@
-.PHONY: build clean run
+.PHONY: build format clean run
 
 BUILD_DIR=build
 JAVA_BUILD_DIR=$(BUILD_DIR)/classes
@@ -15,6 +15,9 @@ $(JAVA_INFO): JvmInfo.java
 $(MAIN_PROGRAM): jvm-finder/*.go
 	@mkdir -p "$(GO_BUILD_DIR)"
 	@cd jvm-finder && go build -ldflags "-s -w" -o "../$(MAIN_PROGRAM)" jvm-finder
+
+format:
+	@cd jvm-finder && go fmt
 
 clean:
 	@rm  -rf "$(BUILD_DIR)"

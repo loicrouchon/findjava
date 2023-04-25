@@ -103,9 +103,9 @@ func (jvmInfos *JvmInfos) Fetch(javaPath string) {
 	jvmInfos.jvmInfos[javaPath] = jvmInfo
 }
 
-func (cache *JvmInfos) doFetch(javaPath string) JvmInfo {
+func (jvmInfos *JvmInfos) doFetch(javaPath string) JvmInfo {
 	jvmInfo := fetchJvmInfo(javaPath)
-	cache.dirtyCache = true
+	jvmInfos.dirtyCache = true
 	logDebug("%s: %s", javaPath, jvmInfo)
 	return jvmInfo
 }
