@@ -4,7 +4,7 @@ import (
 	"sort"
 )
 
-func (jvmInfos *JvmInfos) Select(rules *JvmSelectionRules) (*JvmInfo, bool) {
+func (jvmInfos *JvmInfos) Select(rules *JvmSelectionRules) *JvmInfo {
 	var matchingJvms []JvmInfo
 	for _, jvmInfo := range jvmInfos.jvmInfos {
 		if rules.Matches(&jvmInfo) {
@@ -22,8 +22,8 @@ func (jvmInfos *JvmInfos) Select(rules *JvmSelectionRules) (*JvmInfo, bool) {
 	})
 	logDebug("%v\n", matchingJvms)
 	if matchingJvms != nil && len(matchingJvms) > 0 {
-		return &matchingJvms[0], true
+		return &matchingJvms[0]
 	} else {
-		return nil, false
+		return nil
 	}
 }
