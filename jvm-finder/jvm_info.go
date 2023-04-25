@@ -7,10 +7,12 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type JvmInfos struct {
 	path       string
+	timestamp  time.Time
 	jvmInfos   map[string]JvmInfo
 	dirtyCache bool
 }
@@ -19,6 +21,7 @@ type JvmInfo struct {
 	javaPath                 string
 	javaHome                 string
 	javaSpecificationVersion int
+	fetched                  bool
 }
 
 func (jvmInfo JvmInfo) String() string {
@@ -33,8 +36,10 @@ java.specification.version: %d
 }
 
 func loadJvmInfos(path string, javaPaths []string) JvmInfos {
+	var timestamp time.Time
 	infos := make(map[string]JvmInfo)
-	if _, err := os.Stat(path); err == nil {
+	if fileinfo, err := os.Stat(path); err == nil {
+		timestamp = fileinfo.ModTime()
 		file, err := os.Open(path)
 		if err != nil {
 			logError("Unable to read file %s: %s", path, err)
@@ -49,7 +54,10 @@ func loadJvmInfos(path string, javaPaths []string) JvmInfos {
 				if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
 					infos[jvmInfo.javaPath] = jvmInfo
 				}
-				jvmInfo = JvmInfo{javaPath: strings.Trim(value, "[]")}
+				jvmInfo = JvmInfo{
+					javaPath: strings.Trim(value, "[]"),
+					fetched:  false,
+				}
 			} else if value, ok := strings.CutPrefix(line, "java.home="); ok {
 				jvmInfo.javaHome = value
 			} else if value, ok := strings.CutPrefix(line, "java.specification.version="); ok {
@@ -68,6 +76,7 @@ func loadJvmInfos(path string, javaPaths []string) JvmInfos {
 	}
 	jvmInfos := JvmInfos{
 		path:       path,
+		timestamp:  timestamp,
 		jvmInfos:   infos,
 		dirtyCache: false,
 	}
@@ -79,14 +88,26 @@ func loadJvmInfos(path string, javaPaths []string) JvmInfos {
 	return jvmInfos
 }
 
-func (cache *JvmInfos) Fetch(javaPath string) {
-	if _, found := cache.jvmInfos[javaPath]; !found {
+func (jvmInfos *JvmInfos) Fetch(javaPath string) {
+	var jvmInfo JvmInfo
+	if info, found := jvmInfos.jvmInfos[javaPath]; !found {
 		logInfo("[CACHE MISS] %s", javaPath)
-		jvmInfo := fetchJvmInfo(javaPath)
-		cache.jvmInfos[javaPath] = jvmInfo
-		cache.dirtyCache = true
-		logDebug("%s: %s", javaPath, jvmInfo)
+		jvmInfo = jvmInfos.doFetch(javaPath)
+	} else if javaFileInfo, _ := os.Stat(javaPath); javaFileInfo.ModTime().After(jvmInfos.timestamp) {
+		logInfo("[CACHE OUTDATED] %s", javaPath)
+		jvmInfo = jvmInfos.doFetch(javaPath)
+	} else {
+		jvmInfo = info
 	}
+	jvmInfo.fetched = true
+	jvmInfos.jvmInfos[javaPath] = jvmInfo
+}
+
+func (cache *JvmInfos) doFetch(javaPath string) JvmInfo {
+	jvmInfo := fetchJvmInfo(javaPath)
+	cache.dirtyCache = true
+	logDebug("%s: %s", javaPath, jvmInfo)
+	return jvmInfo
 }
 
 func fetchJvmInfo(javaPath string) JvmInfo {
@@ -111,18 +132,29 @@ func fetchJvmInfo(javaPath string) JvmInfo {
 		javaPath:                 javaPath,
 		javaHome:                 javaHome,
 		javaSpecificationVersion: parseVersion(javaSpecificationVersion),
+		fetched:                  true,
 	}
 }
 
 func (cache *JvmInfos) Save() {
+	for _, jvmInfo := range cache.jvmInfos {
+		if !jvmInfo.fetched {
+			cache.dirtyCache = true
+			break
+		}
+	}
 	if cache.dirtyCache {
 		output := ""
 		for _, jvmInfo := range cache.jvmInfos {
-			output = fmt.Sprintf(`%s
+			if jvmInfo.fetched {
+				output = fmt.Sprintf(`%s
 [%s]
 java.home=%s
 java.specification.version=%d
 `, output, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+			} else {
+				logInfo("[ORPHAN JVM] %s", jvmInfo.javaPath)
+			}
 		}
 		logDebug(output)
 		if err := os.WriteFile(cache.path, []byte(output), 0666); err != nil {
