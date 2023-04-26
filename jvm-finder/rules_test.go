@@ -13,7 +13,7 @@ func TestJvmSelectionRules(t *testing.T) {
 	}
 	for versionRange, expectedRules := range versionRangesToSelectionRules {
 		rules := jvmSelectionRules(&versionRange)
-		if rules.minJvmVersion != expectedRules.minJvmVersion {
+		if *rules != expectedRules {
 			t.Fatalf(`Expecting jvmSelectionRules("%s") == %v but was %v`,
 				versionRange, expectedRules, rules)
 		}

@@ -1,0 +1,7 @@
+{
+    "jvmLookupPaths": [
+        "/usr/bin/java",
+        "/usr/lib/jvm",
+        "~/.sdkman/candidates/java"
+    ]
+}

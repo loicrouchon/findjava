@@ -21,7 +21,7 @@ func setLogLevel(level string) error {
 		currentLogLevel = logLevelError
 	default:
 		currentLogLevel = logLevelError
-		return fmt.Errorf("Invalid log level: '%s'. Available levels are: debug, info, error", level)
+		return fmt.Errorf("invalid log level: '%s'. Available levels are: debug, info, error", level)
 	}
 	return nil
 }
