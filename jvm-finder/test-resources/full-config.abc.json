@@ -1,0 +1,5 @@
+{
+    "jvmLookupPaths": [
+        "~/.sdkman/candidates/java"
+    ]
+}

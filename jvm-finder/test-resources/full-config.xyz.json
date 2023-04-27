@@ -1,5 +1,5 @@
 {
     "jvmVersionRange": {
-        "min": 8
+        "min": 11
     }
 }

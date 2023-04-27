@@ -1,12 +1,10 @@
 {
     "jvmLookupPaths": [
-        "/bin/java",
         "/usr/bin/java",
-        "/usr/local/bin/java",
         "/usr/lib/jvm",
         "~/.sdkman/candidates/java"
     ],
-    "defaultJvmVersionRange": {
+    "jvmVersionRange": {
         "min": 8,
         "max": 17
     }
