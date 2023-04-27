@@ -18,9 +18,9 @@ type JavaExecutable struct {
 	timestamp time.Time
 }
 
-func findAllJavaExecutables(javaLookUpPaths []string) JavaExecutables {
+func findAllJavaExecutables(javaLookUpPaths *[]string) JavaExecutables {
 	javaPaths := make(map[string]time.Time)
-	for _, javaLookUpPath := range javaLookUpPaths {
+	for _, javaLookUpPath := range *javaLookUpPaths {
 		if strings.HasPrefix(javaLookUpPath, "~") {
 			usr, err := user.Current()
 			if err != nil {

@@ -16,29 +16,21 @@ var r = regexp.MustCompile(fmt.Sprintf(`^(?:`+
 var groupNames = r.SubexpNames()
 
 type JvmSelectionRules struct {
-	minJvmVersion int
-	maxJvmVersion int
+	versionRange *VersionRange
 }
 
-func (rules JvmSelectionRules) Matches(jvmInfo *JvmInfo) bool {
-	if rules.minJvmVersion > 0 && rules.minJvmVersion > jvmInfo.javaSpecificationVersion {
-		return false
-	}
-	if rules.maxJvmVersion > 0 && rules.maxJvmVersion < jvmInfo.javaSpecificationVersion {
-		return false
-	}
-	return true
+func (rules *JvmSelectionRules) Matches(jvmInfo *JvmInfo) bool {
+	return rules.versionRange.Matches(jvmInfo.javaSpecificationVersion)
 }
 
 func (rules JvmSelectionRules) String() string {
-	return fmt.Sprintf("[%d..%d]}", rules.minJvmVersion, rules.maxJvmVersion)
+	return fmt.Sprintf("%v", rules.versionRange)
 }
 
-// TODO default rules could also be read from a system wide config file
-func jvmSelectionRules(jvmVersionRange *string) *JvmSelectionRules {
+func jvmSelectionRules(jvmVersionRange *string, config *Config) *JvmSelectionRules {
 	var rules *JvmSelectionRules
-	if jvmVersionRange != nil {
-		logDebug("%s", *jvmVersionRange)
+	if jvmVersionRange != nil && len(*jvmVersionRange) > 0 {
+		logDebug("Version range argument: %s, config: %v", *jvmVersionRange, config.jvmVersionRange())
 		match := r.FindStringSubmatch(*jvmVersionRange)
 		if len(match) <= 0 {
 			return nil
@@ -59,12 +51,16 @@ func jvmSelectionRules(jvmVersionRange *string) *JvmSelectionRules {
 			}
 		}
 		rules = &JvmSelectionRules{
-			minJvmVersion: minJvmVersion,
-			maxJvmVersion: maxJvmVersion,
+			versionRange: &VersionRange{
+				Min: minJvmVersion,
+				Max: maxJvmVersion,
+			},
 		}
 	} else {
-		rules = &JvmSelectionRules{}
+		rules = &JvmSelectionRules{
+			versionRange: config.jvmVersionRange(),
+		}
 	}
-	logDebug("%s", rules)
+	logDebug("Resolved matching rules %v", rules)
 	return rules
 }

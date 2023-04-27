@@ -2,12 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 )
 
 const defaultKey = "default"
 
+// TODO add lookup in JAVA_HOME env var too
+// TODO instead of a harcoded list, could also look for
+//
+//	all $DIR/java where $DIR are the individual $PATH entries
 var defaultConfigEntry = ConfigEntry{
 	path: "<DEFAULT>",
 	JvmLookupPaths: []string{
@@ -33,9 +38,25 @@ type ConfigEntry struct {
 	JvmVersionRange *VersionRange
 }
 
+const allVersions = 0
+
 type VersionRange struct {
 	Min int
 	Max int
+}
+
+func (versionRange *VersionRange) String() string {
+	return fmt.Sprintf("[%d..%d]}", versionRange.Min, versionRange.Max)
+}
+
+func (versionRange *VersionRange) Matches(version int) bool {
+	if versionRange.Min != allVersions && versionRange.Min > version {
+		return false
+	}
+	if versionRange.Max != allVersions && versionRange.Max < version {
+		return false
+	}
+	return true
 }
 
 func (config *Config) paths() []string {

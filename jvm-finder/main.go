@@ -7,35 +7,21 @@ import (
 	"path/filepath"
 )
 
-// TODO add lookup in JAVA_HOME env var too
-// TODO instead of a harcoded list, could also look for
-//
-//	all $DIR/java where $DIR are the individual $PATH entries
-//	plus the current directory
-//
-// TODO this list could also come from a system-wide config file
-var javaLookUpPaths = []string{
-	"/bin/java",
-	"/usr/bin/java",
-	"/usr/local/bin/java",
-	"/usr/lib/jvm",
-	"~/.sdkman/candidates/java",
-}
-
 func main() {
-	var rules *JvmSelectionRules
 	args := parseArgs()
+	config := loadConfig("/etc/jvm-finder/config.json", "default")
+	var rules *JvmSelectionRules
 	if len(args) > 1 {
 		Usage()
 	} else if len(args) == 1 {
-		rules = jvmSelectionRules(&args[0])
+		rules = jvmSelectionRules(&args[0], config)
 		if rules == nil {
 			Usage()
 		}
 	} else {
-		rules = jvmSelectionRules(nil)
+		rules = jvmSelectionRules(nil, config)
 	}
-	javaExecutables := findAllJavaExecutables(javaLookUpPaths)
+	javaExecutables := findAllJavaExecutables(config.jvmLookupPaths())
 	jvmInfos := loadJvmInfos("./build/jvm-finder.properties", &javaExecutables)
 	if jvm := jvmInfos.Select(rules); jvm != nil {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)

@@ -1,19 +1,26 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
 func TestJvmSelectionRules(t *testing.T) {
+	config := Config{
+		configs: []ConfigEntry{{
+			JvmVersionRange: &VersionRange{Min: 11, Max: allVersions},
+		}},
+	}
 	versionRangesToSelectionRules := map[string]JvmSelectionRules{
-		"8":     {minJvmVersion: 8, maxJvmVersion: 8},
-		"17..":  {minJvmVersion: 17, maxJvmVersion: 0},
-		"..11":  {minJvmVersion: 0, maxJvmVersion: 11},
-		"9..14": {minJvmVersion: 9, maxJvmVersion: 14},
+		"8":     {versionRange: &VersionRange{Min: 8, Max: 8}},
+		"17..":  {versionRange: &VersionRange{Min: 17, Max: allVersions}},
+		"..11":  {versionRange: &VersionRange{Min: allVersions, Max: 11}},
+		"9..14": {versionRange: &VersionRange{Min: 9, Max: 14}},
+		"":      {versionRange: &VersionRange{Min: 11, Max: allVersions}},
 	}
 	for versionRange, expectedRules := range versionRangesToSelectionRules {
-		rules := jvmSelectionRules(&versionRange)
-		if *rules != expectedRules {
+		rules := jvmSelectionRules(&versionRange, &config)
+		if !reflect.DeepEqual(rules, &expectedRules) {
 			t.Fatalf(`Expecting jvmSelectionRules("%s") == %v but was %v`,
 				versionRange, expectedRules, rules)
 		}
@@ -29,75 +36,75 @@ func TestJvmSelectionRulesMatches(t *testing.T) {
 	testData := []TestData{
 		// Exact version match
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 8, maxJvmVersion: 8},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 8, Max: 8}},
 			jvmInfo:     jvmWithVersion(7),
 			shouldMatch: false,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 8, maxJvmVersion: 8},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 8, Max: 8}},
 			jvmInfo:     jvmWithVersion(8),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 8, maxJvmVersion: 8},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 8, Max: 8}},
 			jvmInfo:     jvmWithVersion(9),
 			shouldMatch: false,
 		},
 		// Exact or next versions match
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 17, maxJvmVersion: 0},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 17, Max: 0}},
 			jvmInfo:     jvmWithVersion(15),
 			shouldMatch: false,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 17, maxJvmVersion: 0},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 17, Max: 0}},
 			jvmInfo:     jvmWithVersion(17),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 17, maxJvmVersion: 0},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 17, Max: 0}},
 			jvmInfo:     jvmWithVersion(18),
 			shouldMatch: true,
 		},
 		// Exact or previous versions match
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 0, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 0, Max: 17}},
 			jvmInfo:     jvmWithVersion(15),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 0, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 0, Max: 17}},
 			jvmInfo:     jvmWithVersion(17),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 0, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 0, Max: 17}},
 			jvmInfo:     jvmWithVersion(18),
 			shouldMatch: false,
 		},
 		// Full range match
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 11, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 11, Max: 17}},
 			jvmInfo:     jvmWithVersion(10),
 			shouldMatch: false,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 11, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 11, Max: 17}},
 			jvmInfo:     jvmWithVersion(11),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 11, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 11, Max: 17}},
 			jvmInfo:     jvmWithVersion(15),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 11, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 11, Max: 17}},
 			jvmInfo:     jvmWithVersion(17),
 			shouldMatch: true,
 		},
 		{
-			rules:       JvmSelectionRules{minJvmVersion: 11, maxJvmVersion: 17},
+			rules:       JvmSelectionRules{versionRange: &VersionRange{Min: 11, Max: 17}},
 			jvmInfo:     jvmWithVersion(18),
 			shouldMatch: false,
 		},
