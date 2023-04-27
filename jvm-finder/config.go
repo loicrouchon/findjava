@@ -41,15 +41,15 @@ type ConfigEntry struct {
 const allVersions = 0
 
 type VersionRange struct {
-	Min int
-	Max int
+	Min uint
+	Max uint
 }
 
 func (versionRange *VersionRange) String() string {
 	return fmt.Sprintf("[%d..%d]}", versionRange.Min, versionRange.Max)
 }
 
-func (versionRange *VersionRange) Matches(version int) bool {
+func (versionRange *VersionRange) Matches(version uint) bool {
 	if versionRange.Min != allVersions && versionRange.Min > version {
 		return false
 	}

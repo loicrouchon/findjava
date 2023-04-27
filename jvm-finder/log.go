@@ -9,7 +9,7 @@ const logLevelDebug = 2
 const logLevelInfo = 1
 const logLevelError = 0
 
-var currentLogLevel int
+var currentLogLevel uint
 
 func setLogLevel(level string) error {
 	switch level {

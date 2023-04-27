@@ -10,7 +10,7 @@ import (
 func main() {
 	args := parseArgs()
 	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
-	var rules = jvmSelectionRules(&args.versionRange, config)
+	var rules = jvmSelectionRules(args.minJavaVersion, args.maxJavaVersion, config)
 	if rules == nil {
 		Usage()
 	}
@@ -25,16 +25,18 @@ func main() {
 }
 
 type Args struct {
-	logLevel     string
-	configKey    string
-	versionRange string
+	logLevel       string
+	configKey      string
+	minJavaVersion uint
+	maxJavaVersion uint
 }
 
 func parseArgs() *Args {
 	args := Args{}
 	flag.StringVar(&args.logLevel, "log-level", "error", "Log level: debug, info, error")
 	flag.StringVar(&args.configKey, "config-key", "default", "The configuration to load")
-	flag.StringVar(&args.versionRange, "version-range", "", "The Java Language Specification version range.")
+	flag.UintVar(&args.minJavaVersion, "min-java-version", allVersions, "The minimum (inclusive) Java Language Specification version to search for.")
+	flag.UintVar(&args.maxJavaVersion, "max-java-version", allVersions, "The maximum (inclusive) Java Language Specification version to search for.")
 	flag.Parse()
 	if err := setLogLevel(args.logLevel); err != nil {
 		dierr(err)

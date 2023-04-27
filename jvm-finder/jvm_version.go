@@ -4,7 +4,7 @@ import (
 	"strconv"
 )
 
-func parseVersion(version string) int {
+func parseVersion(version string) uint {
 	switch version {
 	case "1.0", "1.1":
 		return 1
@@ -24,9 +24,9 @@ func parseVersion(version string) int {
 		return 8
 	default:
 		v, err := strconv.Atoi(version)
-		if err != nil {
-			die("JVM version %s cannot be parsed as an int", version)
+		if err != nil || v < 0 {
+			die("JVM version %s cannot be parsed as an unsigned int", version)
 		}
-		return v
+		return uint(v)
 	}
 }

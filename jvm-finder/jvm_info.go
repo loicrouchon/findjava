@@ -20,7 +20,7 @@ type JvmInfos struct {
 type JvmInfo struct {
 	javaPath                 string
 	javaHome                 string
-	javaSpecificationVersion int
+	javaSpecificationVersion uint
 	fetched                  bool
 }
 
@@ -62,7 +62,7 @@ func loadJvmInfos(path string, javaPaths *JavaExecutables) JvmInfos {
 				jvmInfo.javaHome = value
 			} else if value, ok := strings.CutPrefix(line, "java.specification.version="); ok {
 				if version, err := strconv.Atoi(value); err == nil {
-					jvmInfo.javaSpecificationVersion = version
+					jvmInfo.javaSpecificationVersion = uint(version)
 				}
 			}
 		}

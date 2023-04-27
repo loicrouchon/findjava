@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseVersion(t *testing.T) {
-	versions := map[string]int{
+	versions := map[string]uint{
 		"1.0": 1,
 		"1.1": 1,
 		"1.2": 2,
@@ -18,7 +18,7 @@ func TestParseVersion(t *testing.T) {
 		"1.8": 8,
 	}
 	for i := 1; i < 25; i++ {
-		versions[strconv.Itoa(i)] = i
+		versions[strconv.Itoa(i)] = uint(i)
 	}
 	for versionToParse, expectedVersion := range versions {
 		parsedVersion := parseVersion(versionToParse)

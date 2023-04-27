@@ -6,22 +6,25 @@ import (
 )
 
 func TestJvmSelectionRules(t *testing.T) {
+	type TestData struct {
+		minJavaVersion, maxJavaVersion uint
+	}
 	config := Config{
 		configs: []ConfigEntry{{
 			JvmVersionRange: &VersionRange{Min: 11, Max: allVersions},
 		}},
 	}
-	versionRangesToSelectionRules := map[string]JvmSelectionRules{
-		"8":     {versionRange: &VersionRange{Min: 8, Max: 8}},
-		"17..":  {versionRange: &VersionRange{Min: 17, Max: allVersions}},
-		"..11":  {versionRange: &VersionRange{Min: allVersions, Max: 11}},
-		"9..14": {versionRange: &VersionRange{Min: 9, Max: 14}},
-		"":      {versionRange: &VersionRange{Min: 11, Max: allVersions}},
+	versionRangesToSelectionRules := map[TestData]JvmSelectionRules{
+		{minJavaVersion: 8, maxJavaVersion: 8}:                     {versionRange: &VersionRange{Min: 8, Max: 8}},
+		{minJavaVersion: 17, maxJavaVersion: allVersions}:          {versionRange: &VersionRange{Min: 17, Max: allVersions}},
+		{minJavaVersion: allVersions, maxJavaVersion: 11}:          {versionRange: &VersionRange{Min: allVersions, Max: 11}},
+		{minJavaVersion: 9, maxJavaVersion: 14}:                    {versionRange: &VersionRange{Min: 9, Max: 14}},
+		{minJavaVersion: allVersions, maxJavaVersion: allVersions}: {versionRange: &VersionRange{Min: 11, Max: allVersions}},
 	}
 	for versionRange, expectedRules := range versionRangesToSelectionRules {
-		rules := jvmSelectionRules(&versionRange, &config)
+		rules := jvmSelectionRules(versionRange.minJavaVersion, versionRange.maxJavaVersion, &config)
 		if !reflect.DeepEqual(rules, &expectedRules) {
-			t.Fatalf(`Expecting jvmSelectionRules("%s") == %v but was %v`,
+			t.Fatalf(`Expecting jvmSelectionRules("%v") == %v but was %v`,
 				versionRange, expectedRules, rules)
 		}
 	}
@@ -118,7 +121,7 @@ func TestJvmSelectionRulesMatches(t *testing.T) {
 	}
 }
 
-func jvmWithVersion(version int) JvmInfo {
+func jvmWithVersion(version uint) JvmInfo {
 	return JvmInfo{
 		javaPath:                 "/jvm/bin/java",
 		javaHome:                 "/jvm",
