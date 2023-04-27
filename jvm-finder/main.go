@@ -9,17 +9,10 @@ import (
 
 func main() {
 	args := parseArgs()
-	config := loadConfig("/etc/jvm-finder/config.json", "default")
-	var rules *JvmSelectionRules
-	if len(args) > 1 {
+	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
+	var rules = jvmSelectionRules(&args.versionRange, config)
+	if rules == nil {
 		Usage()
-	} else if len(args) == 1 {
-		rules = jvmSelectionRules(&args[0], config)
-		if rules == nil {
-			Usage()
-		}
-	} else {
-		rules = jvmSelectionRules(nil, config)
 	}
 	javaExecutables := findAllJavaExecutables(config.jvmLookupPaths())
 	jvmInfos := loadJvmInfos("./build/jvm-finder.properties", &javaExecutables)
@@ -31,14 +24,25 @@ func main() {
 	}
 }
 
-func parseArgs() []string {
-	var logLevel string
-	flag.StringVar(&logLevel, "loglevel", "error", "Log level: debug, info, error")
+type Args struct {
+	logLevel     string
+	configKey    string
+	versionRange string
+}
+
+func parseArgs() *Args {
+	args := Args{}
+	flag.StringVar(&args.logLevel, "log-level", "error", "Log level: debug, info, error")
+	flag.StringVar(&args.configKey, "config-key", "default", "The configuration to load")
+	flag.StringVar(&args.versionRange, "version-range", "", "The Java Language Specification version range.")
 	flag.Parse()
-	if err := setLogLevel(logLevel); err != nil {
+	if err := setLogLevel(args.logLevel); err != nil {
 		dierr(err)
 	}
-	return flag.Args()
+	if len(flag.Args()) > 0 {
+		Usage()
+	}
+	return &args
 }
 
 func Usage() {
