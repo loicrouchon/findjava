@@ -6,15 +6,15 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	defaultJvmLookupPath := []string{
-		resolvePath("$JAVA_HOME/bin/java"),
-		resolvePath("$GRAALVM_HOME/bin/java"),
+	defaultJvmLookupPath := resolvePaths([]string{
+		"$JAVA_HOME/bin/java",
+		"$GRAALVM_HOME/bin/java",
 		"/bin/java",
 		"/usr/bin/java",
 		"/usr/local/bin/java",
 		"/usr/lib/jvm",
-		resolvePath("~/.sdkman/candidates/java"),
-	}
+		"~/.sdkman/candidates/java",
+	})
 	defaultJvmVersionRange := &VersionRange{
 		Min: 0,
 		Max: 0,
@@ -29,11 +29,11 @@ func TestLoadConfig(t *testing.T) {
 			JvmVersionRange: defaultJvmVersionRange,
 		},
 		"test-resources/path-lookup-config.json": {
-			JvmLookupPaths: []string{
+			JvmLookupPaths: resolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
-				resolvePath("~/.sdkman/candidates/java"),
-			},
+				"~/.sdkman/candidates/java",
+			}),
 			JvmVersionRange: defaultJvmVersionRange,
 		},
 		"test-resources/min-jvm-version-config.json": {
@@ -43,11 +43,11 @@ func TestLoadConfig(t *testing.T) {
 			},
 		},
 		"test-resources/full-config.json": {
-			JvmLookupPaths: []string{
+			JvmLookupPaths: resolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
-				resolvePath("~/.sdkman/candidates/java"),
-			},
+				"~/.sdkman/candidates/java",
+			}),
 			JvmVersionRange: &VersionRange{
 				Min: 8,
 				Max: 17,
@@ -76,20 +76,20 @@ func TestLoadConfig(t *testing.T) {
 func TestLoadConfigWithOverrides(t *testing.T) {
 	data := map[string]ConfigEntry{
 		"abc": {
-			JvmLookupPaths: []string{
-				resolvePath("~/.sdkman/candidates/java"),
-			},
+			JvmLookupPaths: resolvePaths([]string{
+				"~/.sdkman/candidates/java",
+			}),
 			JvmVersionRange: &VersionRange{
 				Min: 8,
 				Max: 17,
 			},
 		},
 		"xyz": {
-			JvmLookupPaths: []string{
+			JvmLookupPaths: resolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
-				resolvePath("~/.sdkman/candidates/java"),
-			},
+				"~/.sdkman/candidates/java",
+			}),
 			JvmVersionRange: &VersionRange{
 				Min: 11,
 			},

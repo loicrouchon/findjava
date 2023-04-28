@@ -19,7 +19,6 @@ type JavaExecutable struct {
 func findAllJavaExecutables(javaLookUpPaths *[]string) JavaExecutables {
 	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range *javaLookUpPaths {
-		javaLookUpPath = resolvePath(javaLookUpPath)
 		logDebug("Checking %s", javaLookUpPath)
 		for _, java := range findJavaExecutables(javaLookUpPath) {
 			logDebug("  - Found %v", java)

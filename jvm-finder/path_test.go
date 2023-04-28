@@ -16,11 +16,12 @@ func TestResolvePath(t *testing.T) {
 	} else {
 		userHome = u.HomeDir
 	}
-	envVarHome := os.Getenv("HOME")
+	os.Setenv("RESOLVE_PATH_ENV", "/resolve/path/env")
 	testData := []TestData{
 		{path: "", expectedPath: ""},
-		{path: "$HOME", expectedPath: envVarHome},
-		{path: "$HOME/jdks/bin/java", expectedPath: envVarHome + "/jdks/bin/java"},
+		{path: "$RESOLVE_PATH_NON_EXISTING_ENV", expectedPath: ""},
+		{path: "$RESOLVE_PATH_ENV", expectedPath: "/resolve/path/env"},
+		{path: "$RESOLVE_PATH_ENV/jdks/bin/java", expectedPath: "/resolve/path/env/jdks/bin/java"},
 		{path: "~/jdks/bin/java", expectedPath: userHome + "/jdks/bin/java"},
 	}
 	for _, data := range testData {

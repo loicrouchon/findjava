@@ -136,11 +136,10 @@ func jvmsMetadataCachePath(configs []ConfigEntry) string {
 func jvmsLookupPaths(configs []ConfigEntry) []string {
 	for _, cfg := range configs {
 		if len(cfg.JvmLookupPaths) > 0 {
-			var paths []string
-			for _, jvmLookupPath := range cfg.JvmLookupPaths {
-				paths = append(paths, resolvePath(jvmLookupPath))
+			resolvedPaths := resolvePaths(cfg.JvmLookupPaths)
+			if len(resolvedPaths) > 0 {
+				return resolvedPaths
 			}
-			return paths
 		}
 	}
 	die("no JVMs lookup path defined in configuration files %v", paths(configs))
