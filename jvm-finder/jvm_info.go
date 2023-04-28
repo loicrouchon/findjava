@@ -35,7 +35,15 @@ java.specification.version: %d
 		jvmInfo.javaSpecificationVersion)
 }
 
-func loadJvmInfos(path string, javaPaths *JavaExecutables) JvmInfos {
+func loadJvmsInfos(path string, javaPaths *JavaExecutables) JvmInfos {
+	jvmInfos := loadJvmsInfosFromCache(path)
+	for javaPath, modTime := range javaPaths.javaPaths {
+		jvmInfos.Fetch(javaPath, modTime)
+	}
+	jvmInfos.Save()
+	return jvmInfos
+}
+func loadJvmsInfosFromCache(path string) JvmInfos {
 	var timestamp time.Time
 	infos := make(map[string]JvmInfo)
 	if fileinfo, err := os.Stat(path); err == nil {
@@ -51,9 +59,7 @@ func loadJvmInfos(path string, javaPaths *JavaExecutables) JvmInfos {
 		for scanner.Scan() {
 			line := scanner.Text()
 			if value, found := strings.CutPrefix(line, "["); found {
-				if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
-					infos[jvmInfo.javaPath] = jvmInfo
-				}
+				registerIfComplete(jvmInfo, infos)
 				jvmInfo = JvmInfo{
 					javaPath: strings.Trim(value, "[]"),
 					fetched:  false,
@@ -66,26 +72,23 @@ func loadJvmInfos(path string, javaPaths *JavaExecutables) JvmInfos {
 				}
 			}
 		}
-		if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
-			infos[jvmInfo.javaPath] = jvmInfo
-		}
-
+		registerIfComplete(jvmInfo, infos)
 		if err := scanner.Err(); err != nil {
 			logErr(err)
 		}
 	}
-	jvmInfos := JvmInfos{
+	return JvmInfos{
 		path:       path,
 		timestamp:  timestamp,
 		jvmInfos:   infos,
 		dirtyCache: false,
 	}
+}
 
-	for javaPath, modTime := range javaPaths.javaPaths {
-		jvmInfos.Fetch(javaPath, modTime)
+func registerIfComplete(jvmInfo JvmInfo, infos map[string]JvmInfo) {
+	if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
+		infos[jvmInfo.javaPath] = jvmInfo
 	}
-	jvmInfos.Save()
-	return jvmInfos
 }
 
 func (jvmInfos *JvmInfos) Fetch(javaPath string, modTime time.Time) {
@@ -145,15 +148,16 @@ func (cache *JvmInfos) Save() {
 	if cache.dirtyCache {
 		output := ""
 		for _, jvmInfo := range cache.jvmInfos {
-			if jvmInfo.fetched {
-				output = fmt.Sprintf(`%s
+			jvmInfoAsStr := fmt.Sprintf(`
 [%s]
 java.home=%s
 java.specification.version=%d
-`, output, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+`, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
+			if jvmInfo.fetched {
+				output += jvmInfoAsStr
+			} else if _, err := os.Stat(jvmInfo.javaPath); err == nil {
+				output += jvmInfoAsStr
 			} else {
-				// TODO check if really orphan before deleting to avoid adding/removing in loops
-				//      when dealing with configs overriding the lookup paths
 				logInfo("[ORPHAN JVM] %s", jvmInfo.javaPath)
 			}
 		}

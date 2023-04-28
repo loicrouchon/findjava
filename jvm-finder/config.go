@@ -32,6 +32,7 @@ var defaultConfigEntry = ConfigEntry{
 type Config struct {
 	configs []ConfigEntry
 }
+
 func (cfg *Config) String() string {
 	return fmt.Sprintf(`{
 	configs: %v
