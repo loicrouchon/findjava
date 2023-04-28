@@ -32,6 +32,11 @@ var defaultConfigEntry = ConfigEntry{
 type Config struct {
 	configs []ConfigEntry
 }
+func (cfg *Config) String() string {
+	return fmt.Sprintf(`{
+	configs: %v
+}`, cfg.configs)
+}
 
 type ConfigEntry struct {
 	path                  string
@@ -40,13 +45,13 @@ type ConfigEntry struct {
 	JvmVersionRange       *VersionRange
 }
 
-func (cfg *ConfigEntry) String() string {
+func (cfg ConfigEntry) String() string {
 	return fmt.Sprintf(`{
 	path: %s
 	JvmsMetadataCachePath: %s
 	JvmLookupPaths: %v
-	JvmVersionRange: %v
-}`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, *cfg.JvmVersionRange)
+	JvmVersionRange: %s
+}`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, cfg.JvmVersionRange)
 }
 
 const allVersions = 0
