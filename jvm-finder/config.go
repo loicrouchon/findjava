@@ -9,13 +9,9 @@ import (
 
 const defaultKey = ""
 
-// TODO add lookup in JAVA_HOME env var too
-// TODO instead of a harcoded list, could also look for
-//
-//	all $DIR/java where $DIR are the individual $PATH entries
 var defaultConfigEntry = ConfigEntry{
 	path:                  "<DEFAULT>",
-	JvmsMetadataCachePath: "./build/jvm-finder.properties",
+	JvmsMetadataCachePath: "./build/jvm-finder.json",
 	JvmLookupPaths: []string{
 		"$JAVA_HOME/bin/java",
 		"$GRAALVM_HOME/bin/java",

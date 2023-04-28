@@ -4,11 +4,11 @@ import (
 	"sort"
 )
 
-func (jvmInfos *JvmInfos) Select(rules *JvmSelectionRules) *JvmInfo {
+func (jvmInfos *JvmsInfos) Select(rules *JvmSelectionRules) *JvmInfo {
 	var matchingJvms []JvmInfo
-	for _, jvmInfo := range jvmInfos.jvmInfos {
-		if rules.Matches(&jvmInfo) {
-			matchingJvms = append(matchingJvms, jvmInfo)
+	for _, jvmInfo := range jvmInfos.Jvms {
+		if rules.Matches(jvmInfo) {
+			matchingJvms = append(matchingJvms, *jvmInfo)
 			logInfo("[CANDIDATE] %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
 		} else {
 			logInfo("[IGNORED]   %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
@@ -20,8 +20,8 @@ func (jvmInfos *JvmInfos) Select(rules *JvmSelectionRules) *JvmInfo {
 		}
 		return matchingJvms[i].javaSpecificationVersion > matchingJvms[j].javaSpecificationVersion
 	})
-	logDebug("%v\n", matchingJvms)
-	if matchingJvms != nil && len(matchingJvms) > 0 {
+	// logDebug("%v\n", matchingJvms)
+	if len(matchingJvms) > 0 {
 		return &matchingJvms[0]
 	} else {
 		return nil

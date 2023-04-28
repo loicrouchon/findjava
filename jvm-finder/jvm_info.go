@@ -1,19 +1,18 @@
 package main
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 )
 
-type JvmInfos struct {
+type JvmsInfos struct {
 	path       string
-	timestamp  time.Time
-	jvmInfos   map[string]JvmInfo
+	Jvms       map[string]*JvmInfo
 	dirtyCache bool
 }
 
@@ -22,6 +21,13 @@ type JvmInfo struct {
 	javaHome                 string
 	javaSpecificationVersion uint
 	fetched                  bool
+	FetchedAt                time.Time
+	SystemProperties         map[string]string
+}
+
+func (jvm *JvmInfo) rebuild() {
+	jvm.javaHome = jvm.SystemProperties["java.home"]
+	jvm.javaSpecificationVersion = parseVersion(jvm.SystemProperties["java.specification.version"])
 }
 
 func (jvmInfo JvmInfo) String() string {
@@ -35,7 +41,7 @@ java.specification.version: %d
 		jvmInfo.javaSpecificationVersion)
 }
 
-func loadJvmsInfos(path string, javaPaths *JavaExecutables) JvmInfos {
+func loadJvmsInfos(path string, javaPaths *JavaExecutables) JvmsInfos {
 	jvmInfos := loadJvmsInfosFromCache(path)
 	for javaPath, modTime := range javaPaths.javaPaths {
 		jvmInfos.Fetch(javaPath, modTime)
@@ -43,131 +49,99 @@ func loadJvmsInfos(path string, javaPaths *JavaExecutables) JvmInfos {
 	jvmInfos.Save()
 	return jvmInfos
 }
-func loadJvmsInfosFromCache(path string) JvmInfos {
-	var timestamp time.Time
-	infos := make(map[string]JvmInfo)
-	if fileinfo, err := os.Stat(path); err == nil {
-		timestamp = fileinfo.ModTime()
-		file, err := os.Open(path)
-		if err != nil {
-			logError("Unable to read file %s: %s", path, err)
-		}
-		defer file.Close()
-
-		var jvmInfo JvmInfo
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if value, found := strings.CutPrefix(line, "["); found {
-				registerIfComplete(jvmInfo, infos)
-				jvmInfo = JvmInfo{
-					javaPath: strings.Trim(value, "[]"),
-					fetched:  false,
-				}
-			} else if value, ok := strings.CutPrefix(line, "java.home="); ok {
-				jvmInfo.javaHome = value
-			} else if value, ok := strings.CutPrefix(line, "java.specification.version="); ok {
-				if version, err := strconv.Atoi(value); err == nil {
-					jvmInfo.javaSpecificationVersion = uint(version)
-				}
-			}
-		}
-		registerIfComplete(jvmInfo, infos)
-		if err := scanner.Err(); err != nil {
-			logErr(err)
-		}
-	}
-	return JvmInfos{
+func loadJvmsInfosFromCache(path string) JvmsInfos {
+	jvmsInfos := JvmsInfos{
 		path:       path,
-		timestamp:  timestamp,
-		jvmInfos:   infos,
 		dirtyCache: false,
+		Jvms:       make(map[string]*JvmInfo),
 	}
+	if _, err := os.Stat(path); err == nil {
+		logDebug("Loading cache from %s", path)
+		file, _ := os.Open(path)
+		defer file.Close()
+		decoder := json.NewDecoder(file)
+		err := decoder.Decode(&jvmsInfos)
+		if err != nil {
+			dierr(err)
+		}
+		for javaPath, jvm := range jvmsInfos.Jvms {
+			jvm.javaPath = javaPath
+			jvm.rebuild()
+		}
+		// logDebug("JVMs rebuilt loaded from cache: %#v", jvmsInfos)
+	}
+	return jvmsInfos
 }
 
-func registerIfComplete(jvmInfo JvmInfo, infos map[string]JvmInfo) {
-	if len(jvmInfo.javaHome) > 0 && jvmInfo.javaSpecificationVersion > 0 {
-		infos[jvmInfo.javaPath] = jvmInfo
-	}
-}
-
-func (jvmInfos *JvmInfos) Fetch(javaPath string, modTime time.Time) {
-	var jvmInfo JvmInfo
-	if info, found := jvmInfos.jvmInfos[javaPath]; !found {
+func (jvmInfos *JvmsInfos) Fetch(javaPath string, modTime time.Time) {
+	var jvmInfo *JvmInfo
+	if info, found := jvmInfos.Jvms[javaPath]; !found {
 		logInfo("[CACHE MISS] %s", javaPath)
 		jvmInfo = jvmInfos.doFetch(javaPath)
-	} else if modTime.After(jvmInfos.timestamp) {
+	} else if modTime.After(info.FetchedAt) {
 		logInfo("[CACHE OUTDATED] %s", javaPath)
 		jvmInfo = jvmInfos.doFetch(javaPath)
 	} else {
 		jvmInfo = info
 	}
 	jvmInfo.fetched = true
-	jvmInfos.jvmInfos[javaPath] = jvmInfo
+	jvmInfos.Jvms[javaPath] = jvmInfo
 }
 
-func (jvmInfos *JvmInfos) doFetch(javaPath string) JvmInfo {
+func (jvmInfos *JvmsInfos) doFetch(javaPath string) *JvmInfo {
 	jvmInfo := fetchJvmInfo(javaPath)
 	jvmInfos.dirtyCache = true
 	logDebug("%s: %s", javaPath, jvmInfo)
 	return jvmInfo
 }
 
-func fetchJvmInfo(javaPath string) JvmInfo {
+func fetchJvmInfo(javaPath string) *JvmInfo {
 	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		die("Fail to call %s %s", javaPath, err)
 	}
 	lines := strings.Split(string(output), "\n")
-	var javaSpecificationVersion string
-	var javaHome string
+	systemProperties := make(map[string]string)
 	for _, line := range lines {
-		if value, found := strings.CutPrefix(line, "java.home="); found {
-			javaHome = strings.TrimSpace(value)
-		}
-		if value, found := strings.CutPrefix(line, "java.specification.version="); found {
-			javaSpecificationVersion = strings.TrimSpace(value)
+		split := strings.SplitN(line, "=", 2)
+		if split[0] == "java.home" || split[0] == "java.specification.version" {
+			systemProperties[split[0]] = strings.TrimSpace(split[1])
 		}
 	}
-	return JvmInfo{
-		javaPath:                 javaPath,
-		javaHome:                 javaHome,
-		javaSpecificationVersion: parseVersion(javaSpecificationVersion),
-		fetched:                  true,
+	jvmInfo := JvmInfo{
+		javaPath:         javaPath,
+		fetched:          true,
+		FetchedAt:        time.Now(),
+		SystemProperties: systemProperties,
+	}
+	jvmInfo.rebuild()
+	return &jvmInfo
+}
+
+func (jvmsInfos *JvmsInfos) Save() {
+	for javaPath, jvmInfo := range jvmsInfos.Jvms {
+		if !jvmInfo.fetched {
+			if fileinfo, err := os.Stat(javaPath); err == nil {
+				if fileinfo.ModTime().After(jvmInfo.FetchedAt) {
+					jvmsInfos.doFetch(javaPath)
+				}
+			} else {
+				delete(jvmsInfos.Jvms, javaPath)
+				jvmsInfos.dirtyCache = true
+			}
+		}
+	}
+	if jvmsInfos.dirtyCache {
+		writeToJson(jvmsInfos)
 	}
 }
 
-func (cache *JvmInfos) Save() {
-	for _, jvmInfo := range cache.jvmInfos {
-		if !jvmInfo.fetched {
-			cache.dirtyCache = true
-			break
-		}
-	}
-	if cache.dirtyCache {
-		output := ""
-		for _, jvmInfo := range cache.jvmInfos {
-			jvmInfoAsStr := fmt.Sprintf(`
-[%s]
-java.home=%s
-java.specification.version=%d
-`, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
-			if jvmInfo.fetched {
-				// This avoids the need for os.Stat for the happy case that those JVM were discovered
-				// FIXME Well that means that the refresh timestamp of JVMs not directly fetched
-				// won't match the file modification time. This is a bug.
-				// Can be fixed by removing them or by using per JVM timestamps in the cache
-				output += jvmInfoAsStr
-			} else if _, err := os.Stat(jvmInfo.javaPath); err == nil {
-				output += jvmInfoAsStr
-			} else {
-				logInfo("[ORPHAN JVM] %s", jvmInfo.javaPath)
-			}
-		}
-		logDebug(output)
-		if err := os.WriteFile(cache.path, []byte(output), 0666); err != nil {
-			die("Unable to write to file %s, %s", cache.path, err)
-		}
+func writeToJson(jvmInfos *JvmsInfos) {
+	logDebug("Writing JVMs infos cache to %s", jvmInfos.path)
+	file, _ := json.MarshalIndent(jvmInfos, "", "  ")
+	err := ioutil.WriteFile(jvmInfos.path, file, 0644)
+	if err != nil {
+		die("Unable to write to file %s, %s", jvmInfos.path, err)
 	}
 }

@@ -121,7 +121,6 @@ func TestJvmSelectionRulesMatches(t *testing.T) {
 
 func jvmWithVersion(version uint) JvmInfo {
 	return JvmInfo{
-		javaPath:                 "/jvm/bin/java",
 		javaHome:                 "/jvm",
 		javaSpecificationVersion: version,
 	}
