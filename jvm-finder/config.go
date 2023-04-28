@@ -17,6 +17,7 @@ var defaultConfigEntry = ConfigEntry{
 	path:                  "<DEFAULT>",
 	JvmsMetadataCachePath: "./build/jvm-finder.properties",
 	JvmLookupPaths: []string{
+		"$JAVA_HOME",
 		"/bin/java",
 		"/usr/bin/java",
 		"/usr/local/bin/java",

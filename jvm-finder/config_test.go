@@ -7,6 +7,7 @@ import (
 
 func TestLoadConfig(t *testing.T) {
 	defaultJvmLookupPath := []string{
+		"$JAVA_HOME",
 		"/bin/java",
 		"/usr/bin/java",
 		"/usr/local/bin/java",

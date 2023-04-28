@@ -3,9 +3,7 @@ package main
 import (
 	"io/fs"
 	"os"
-	"os/user"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -21,13 +19,7 @@ type JavaExecutable struct {
 func findAllJavaExecutables(javaLookUpPaths *[]string) JavaExecutables {
 	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range *javaLookUpPaths {
-		if strings.HasPrefix(javaLookUpPath, "~") {
-			usr, err := user.Current()
-			if err != nil {
-				die("Unable to resolve user home directory used in path %s: %s", javaLookUpPath, err)
-			}
-			javaLookUpPath = strings.Replace(javaLookUpPath, "~", usr.HomeDir, 1)
-		}
+		javaLookUpPath = resolvePath(javaLookUpPath)
 		logDebug("Checking %s", javaLookUpPath)
 		for _, java := range findJavaExecutables(javaLookUpPath) {
 			logDebug("  - Found %v", java)

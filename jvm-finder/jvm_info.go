@@ -154,6 +154,7 @@ java.home=%s
 java.specification.version=%d
 `, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
 			if jvmInfo.fetched {
+				// This avoids the need for os.Stat for the happy case that those JVM were discovered
 				output += jvmInfoAsStr
 			} else if _, err := os.Stat(jvmInfo.javaPath); err == nil {
 				output += jvmInfoAsStr
