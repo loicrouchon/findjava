@@ -11,8 +11,8 @@ func main() {
 	args := parseArgs()
 	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
 	rules := jvmSelectionRules(args.minJavaVersion, args.maxJavaVersion, config)
-	javaExecutables := findAllJavaExecutables(config.jvmsLookupPaths())
-	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath(), &javaExecutables)
+	javaExecutables := findAllJavaExecutables(&config.jvmsLookupPaths)
+	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)
 	if jvm := jvmInfos.Select(rules); jvm != nil {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)
 		fmt.Printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))

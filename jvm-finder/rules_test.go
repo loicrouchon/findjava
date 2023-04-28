@@ -10,9 +10,7 @@ func TestJvmSelectionRules(t *testing.T) {
 		minJavaVersion, maxJavaVersion uint
 	}
 	config := Config{
-		configs: []ConfigEntry{{
-			JvmVersionRange: &VersionRange{Min: 11, Max: allVersions},
-		}},
+		jvmVersionRange: VersionRange{Min: 11, Max: allVersions},
 	}
 	versionRangesToSelectionRules := map[TestData]JvmSelectionRules{
 		{minJavaVersion: 8, maxJavaVersion: 8}:                     {versionRange: &VersionRange{Min: 8, Max: 8}},

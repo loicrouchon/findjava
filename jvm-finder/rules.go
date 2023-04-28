@@ -19,7 +19,7 @@ func (rules JvmSelectionRules) String() string {
 func jvmSelectionRules(minJavaVersion uint, maxJavaVersion uint, config *Config) *JvmSelectionRules {
 	var rules JvmSelectionRules
 	if minJavaVersion != allVersions || maxJavaVersion != allVersions {
-		logDebug("Version range argument: [%d..%d], config: %v", minJavaVersion, maxJavaVersion, config.jvmVersionRange())
+		logDebug("Version range argument: [%d..%d], config: %v", minJavaVersion, maxJavaVersion, config.jvmVersionRange)
 		rules = JvmSelectionRules{
 			versionRange: &VersionRange{
 				Min: minJavaVersion,
@@ -28,7 +28,7 @@ func jvmSelectionRules(minJavaVersion uint, maxJavaVersion uint, config *Config)
 		}
 	} else {
 		rules = JvmSelectionRules{
-			versionRange: config.jvmVersionRange(),
+			versionRange: &config.jvmVersionRange,
 		}
 	}
 	logDebug("Resolved matching rules %v", rules)

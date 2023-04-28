@@ -155,6 +155,9 @@ java.specification.version=%d
 `, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
 			if jvmInfo.fetched {
 				// This avoids the need for os.Stat for the happy case that those JVM were discovered
+				// FIXME Well that means that the refresh timestamp of JVMs not directly fetched
+				// won't match the file modification time. This is a bug.
+				// Can be fixed by removing them or by using per JVM timestamps in the cache
 				output += jvmInfoAsStr
 			} else if _, err := os.Stat(jvmInfo.javaPath); err == nil {
 				output += jvmInfoAsStr

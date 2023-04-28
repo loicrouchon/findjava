@@ -37,6 +37,8 @@ func findJavaExecutables(lookUpPath string) []JavaExecutable {
 				return javaExecutable(path, fileInfo)
 			} else if fileInfo.Mode().IsDir() {
 				return javaExecutablesForEachJvmDirectory(path)
+			} else {
+				die("File %s (symlinked from %s) cannot be processed :(", path, lookUpPath)
 			}
 		}
 	}
@@ -56,6 +58,9 @@ func javaExecutable(path string, fileInfo fs.FileInfo) []JavaExecutable {
 }
 
 func javaExecutablesForEachJvmDirectory(directory string) []JavaExecutable {
+	if java := findJavaExecutables(filepath.Join(directory, "bin", "java")); len(java) == 1 {
+		return java
+	}
 	dir, err := os.Open(directory)
 	if err != nil {
 		dierr(err)

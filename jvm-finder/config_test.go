@@ -7,12 +7,13 @@ import (
 
 func TestLoadConfig(t *testing.T) {
 	defaultJvmLookupPath := []string{
-		"$JAVA_HOME",
+		resolvePath("$JAVA_HOME/bin/java"),
+		resolvePath("$GRAALVM_HOME/bin/java"),
 		"/bin/java",
 		"/usr/bin/java",
 		"/usr/local/bin/java",
 		"/usr/lib/jvm",
-		"~/.sdkman/candidates/java",
+		resolvePath("~/.sdkman/candidates/java"),
 	}
 	defaultJvmVersionRange := &VersionRange{
 		Min: 0,
@@ -31,7 +32,7 @@ func TestLoadConfig(t *testing.T) {
 			JvmLookupPaths: []string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
-				"~/.sdkman/candidates/java",
+				resolvePath("~/.sdkman/candidates/java"),
 			},
 			JvmVersionRange: defaultJvmVersionRange,
 		},
@@ -45,7 +46,7 @@ func TestLoadConfig(t *testing.T) {
 			JvmLookupPaths: []string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
-				"~/.sdkman/candidates/java",
+				resolvePath("~/.sdkman/candidates/java"),
 			},
 			JvmVersionRange: &VersionRange{
 				Min: 8,
@@ -59,12 +60,12 @@ func TestLoadConfig(t *testing.T) {
 	}
 	for path, expectedConfigEntry := range data {
 		actualConfig := loadConfig(path, defaultKey)
-		actualJvmLookupPath := *actualConfig.jvmsLookupPaths()
+		actualJvmLookupPath := actualConfig.jvmsLookupPaths
 		if !reflect.DeepEqual(actualJvmLookupPath, expectedConfigEntry.JvmLookupPaths) {
 			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmLookupPaths() == %v but was %v`,
 				path, defaultKey, expectedConfigEntry.JvmLookupPaths, actualJvmLookupPath)
 		}
-		actualJvmVersionRange := *actualConfig.jvmVersionRange()
+		actualJvmVersionRange := actualConfig.jvmVersionRange
 		if !reflect.DeepEqual(actualJvmVersionRange, *(expectedConfigEntry.JvmVersionRange)) {
 			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmVersionRange() == %v but was %v`,
 				path, defaultKey, *expectedConfigEntry.JvmVersionRange, actualJvmVersionRange)
@@ -76,7 +77,7 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 	data := map[string]ConfigEntry{
 		"abc": {
 			JvmLookupPaths: []string{
-				"~/.sdkman/candidates/java",
+				resolvePath("~/.sdkman/candidates/java"),
 			},
 			JvmVersionRange: &VersionRange{
 				Min: 8,
@@ -87,7 +88,7 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 			JvmLookupPaths: []string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
-				"~/.sdkman/candidates/java",
+				resolvePath("~/.sdkman/candidates/java"),
 			},
 			JvmVersionRange: &VersionRange{
 				Min: 11,
@@ -97,12 +98,12 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 	for key, expectedConfigEntry := range data {
 		path := "test-resources/full-config.json"
 		actualConfig := loadConfig(path, key)
-		actualJvmLookupPath := *actualConfig.jvmsLookupPaths()
+		actualJvmLookupPath := actualConfig.jvmsLookupPaths
 		if !reflect.DeepEqual(actualJvmLookupPath, expectedConfigEntry.JvmLookupPaths) {
 			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmLookupPaths() == %v but was %v`,
 				path, defaultKey, expectedConfigEntry.JvmLookupPaths, actualJvmLookupPath)
 		}
-		actualJvmVersionRange := *actualConfig.jvmVersionRange()
+		actualJvmVersionRange := actualConfig.jvmVersionRange
 		if !reflect.DeepEqual(actualJvmVersionRange, *(expectedConfigEntry.JvmVersionRange)) {
 			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmVersionRange() == %v but was %v`,
 				path, defaultKey, *expectedConfigEntry.JvmVersionRange, actualJvmVersionRange)
