@@ -10,12 +10,9 @@ import (
 func main() {
 	args := parseArgs()
 	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
-	var rules = jvmSelectionRules(args.minJavaVersion, args.maxJavaVersion, config)
-	if rules == nil {
-		Usage()
-	}
-	javaExecutables := findAllJavaExecutables(config.jvmLookupPaths())
-	jvmInfos := loadJvmInfos("./build/jvm-finder.properties", &javaExecutables)
+	rules := jvmSelectionRules(args.minJavaVersion, args.maxJavaVersion, config)
+	javaExecutables := findAllJavaExecutables(config.jvmsLookupPaths())
+	jvmInfos := loadJvmInfos(config.jvmsMetadataCachePath(), &javaExecutables)
 	if jvm := jvmInfos.Select(rules); jvm != nil {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)
 		fmt.Printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
@@ -33,26 +30,21 @@ type Args struct {
 
 func parseArgs() *Args {
 	args := Args{}
-	flag.StringVar(&args.logLevel, "log-level", "error", "Log level: debug, info, error")
-	flag.StringVar(&args.configKey, "config-key", "default", "The configuration to load")
-	flag.UintVar(&args.minJavaVersion, "min-java-version", allVersions, "The minimum (inclusive) Java Language Specification version to search for.")
-	flag.UintVar(&args.maxJavaVersion, "max-java-version", allVersions, "The maximum (inclusive) Java Language Specification version to search for.")
+	flag.StringVar(&args.logLevel, "log-level", "error",
+		"Sets the log level to one of: debug, info, error")
+	flag.StringVar(&args.configKey, "config-key", "",
+		"If specified, will look for an optional config.<KEY>.json to load before loading the default configuration")
+	flag.UintVar(&args.minJavaVersion, "min-java-version", allVersions,
+		"The minimum (inclusive) Java Language Specification version the found JVMs should provide")
+	flag.UintVar(&args.maxJavaVersion, "max-java-version", allVersions,
+		"The maximum (inclusive) Java Language Specification version the found JVMs should provide")
 	flag.Parse()
+	if len(flag.Args()) > 0 {
+		flag.Usage()
+		os.Exit(0)
+	}
 	if err := setLogLevel(args.logLevel); err != nil {
 		dierr(err)
 	}
-	if len(flag.Args()) > 0 {
-		Usage()
-	}
 	return &args
-}
-
-func Usage() {
-	logError("Usage jvm-finder [VERSION]")
-	logError("  VERSION: A JVM version range:")
-	logError("      - 17        exact version)")
-	logError("      - 17..      17 or above)")
-	logError("      - ..17      up to 17")
-	logError("      - 11..17    From 11 to 17")
-	os.Exit(1)
 }

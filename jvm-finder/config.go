@@ -7,14 +7,15 @@ import (
 	"strings"
 )
 
-const defaultKey = "default"
+const defaultKey = ""
 
 // TODO add lookup in JAVA_HOME env var too
 // TODO instead of a harcoded list, could also look for
 //
 //	all $DIR/java where $DIR are the individual $PATH entries
 var defaultConfigEntry = ConfigEntry{
-	path: "<DEFAULT>",
+	path:                  "<DEFAULT>",
+	JvmsMetadataCachePath: "./build/jvm-finder.properties",
 	JvmLookupPaths: []string{
 		"/bin/java",
 		"/usr/bin/java",
@@ -33,9 +34,19 @@ type Config struct {
 }
 
 type ConfigEntry struct {
-	path            string
-	JvmLookupPaths  []string
-	JvmVersionRange *VersionRange
+	path                  string
+	JvmsMetadataCachePath string
+	JvmLookupPaths        []string
+	JvmVersionRange       *VersionRange
+}
+
+func (cfg *ConfigEntry) String() string {
+	return fmt.Sprintf(`{
+	path: %s
+	JvmsMetadataCachePath: %s
+	JvmLookupPaths: %v
+	JvmVersionRange: %v
+}`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, *cfg.JvmVersionRange)
 }
 
 const allVersions = 0
@@ -67,13 +78,23 @@ func (config *Config) paths() []string {
 	return paths
 }
 
-func (config *Config) jvmLookupPaths() *[]string {
+func (config *Config) jvmsMetadataCachePath() string {
+	for _, cfg := range config.configs {
+		if cfg.JvmsMetadataCachePath != "" {
+			return cfg.JvmsMetadataCachePath
+		}
+	}
+	die("no JVMs metadata cache path defined in configuration files %v", config.paths())
+	panic("unreachable")
+}
+
+func (config *Config) jvmsLookupPaths() *[]string {
 	for _, cfg := range config.configs {
 		if len(cfg.JvmLookupPaths) > 0 {
 			return &cfg.JvmLookupPaths
 		}
 	}
-	die("no JVM lookup path defined in configuration files %v", config.paths())
+	die("no JVMs lookup path defined in configuration files %v", config.paths())
 	panic("unreachable")
 }
 
@@ -83,7 +104,7 @@ func (config *Config) jvmVersionRange() *VersionRange {
 			return cfg.JvmVersionRange
 		}
 	}
-	die("no JVM Version range defined in configuration files %v", config.paths())
+	die("no version range defined in configuration files %v", config.paths())
 	panic("unreachable")
 }
 
@@ -115,5 +136,6 @@ func loadConfig(defaultConfigPath string, name string) *Config {
 		}
 	}
 	config.configs = append(config.configs, defaultConfigEntry)
+	logDebug("Config: %v", config)
 	return config
 }

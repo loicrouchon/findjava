@@ -58,7 +58,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 	for path, expectedConfigEntry := range data {
 		actualConfig := loadConfig(path, defaultKey)
-		actualJvmLookupPath := *actualConfig.jvmLookupPaths()
+		actualJvmLookupPath := *actualConfig.jvmsLookupPaths()
 		if !reflect.DeepEqual(actualJvmLookupPath, expectedConfigEntry.JvmLookupPaths) {
 			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmLookupPaths() == %v but was %v`,
 				path, defaultKey, expectedConfigEntry.JvmLookupPaths, actualJvmLookupPath)
@@ -96,7 +96,7 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 	for key, expectedConfigEntry := range data {
 		path := "test-resources/full-config.json"
 		actualConfig := loadConfig(path, key)
-		actualJvmLookupPath := *actualConfig.jvmLookupPaths()
+		actualJvmLookupPath := *actualConfig.jvmsLookupPaths()
 		if !reflect.DeepEqual(actualJvmLookupPath, expectedConfigEntry.JvmLookupPaths) {
 			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmLookupPaths() == %v but was %v`,
 				path, defaultKey, expectedConfigEntry.JvmLookupPaths, actualJvmLookupPath)

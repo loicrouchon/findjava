@@ -152,6 +152,8 @@ java.home=%s
 java.specification.version=%d
 `, output, jvmInfo.javaPath, jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
 			} else {
+				// TODO check if really orphan before deleting to avoid adding/removing in loops
+				//      when dealing with configs overriding the lookup paths
 				logInfo("[ORPHAN JVM] %s", jvmInfo.javaPath)
 			}
 		}
