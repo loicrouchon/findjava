@@ -69,13 +69,13 @@ func javaExecutablesForEachJvmDirectory(directory string) []JavaExecutable {
 	if err != nil {
 		dierr(err)
 	}
-	defer dir.Close()
+	defer closeFile(dir)
 
 	files, err := dir.Readdir(-1)
 	if err != nil {
 		dierr(err)
 	}
-	javaPaths := []JavaExecutable{}
+	var javaPaths []JavaExecutable
 	for _, file := range files {
 		if !file.Mode().IsRegular() {
 			path := filepath.Join(directory, file.Name(), "bin", "java")

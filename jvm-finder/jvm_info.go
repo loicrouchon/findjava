@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -30,15 +29,17 @@ func (jvm *JvmInfo) rebuild() {
 	jvm.javaSpecificationVersion = parseVersion(jvm.SystemProperties["java.specification.version"])
 }
 
-func (jvmInfo JvmInfo) String() string {
+func (jvm *JvmInfo) String() string {
 	return fmt.Sprintf(
-		`[%s]
+		`[%v]
+timestamp: %s
 java.home: %s
 java.specification.version: %d
 `,
-		jvmInfo.javaPath,
-		jvmInfo.javaHome,
-		jvmInfo.javaSpecificationVersion)
+		jvm.javaPath,
+		jvm.FetchedAt,
+		jvm.javaHome,
+		jvm.javaSpecificationVersion)
 }
 
 func loadJvmsInfos(path string, javaPaths *JavaExecutables) JvmsInfos {
@@ -58,7 +59,7 @@ func loadJvmsInfosFromCache(path string) JvmsInfos {
 	if _, err := os.Stat(path); err == nil {
 		logDebug("Loading cache from %s", path)
 		file, _ := os.Open(path)
-		defer file.Close()
+		defer closeFile(file)
 		decoder := json.NewDecoder(file)
 		err := decoder.Decode(&jvmsInfos)
 		if err != nil {
@@ -91,7 +92,7 @@ func (jvmInfos *JvmsInfos) Fetch(javaPath string, modTime time.Time) {
 func (jvmInfos *JvmsInfos) doFetch(javaPath string) *JvmInfo {
 	jvmInfo := fetchJvmInfo(javaPath)
 	jvmInfos.dirtyCache = true
-	logDebug("%s: %s", javaPath, jvmInfo)
+	logDebug("%s:\n%s", javaPath, jvmInfo)
 	return jvmInfo
 }
 
@@ -122,8 +123,8 @@ func fetchJvmInfo(javaPath string) *JvmInfo {
 func (jvmsInfos *JvmsInfos) Save() {
 	for javaPath, jvmInfo := range jvmsInfos.Jvms {
 		if !jvmInfo.fetched {
-			if fileinfo, err := os.Stat(javaPath); err == nil {
-				if fileinfo.ModTime().After(jvmInfo.FetchedAt) {
+			if fileInfo, err := os.Stat(javaPath); err == nil {
+				if fileInfo.ModTime().After(jvmInfo.FetchedAt) {
 					jvmsInfos.doFetch(javaPath)
 				}
 			} else {
@@ -140,7 +141,7 @@ func (jvmsInfos *JvmsInfos) Save() {
 func writeToJson(jvmInfos *JvmsInfos) {
 	logDebug("Writing JVMs infos cache to %s", jvmInfos.path)
 	file, _ := json.MarshalIndent(jvmInfos, "", "  ")
-	err := ioutil.WriteFile(jvmInfos.path, file, 0644)
+	err := os.WriteFile(jvmInfos.path, file, 0644)
 	if err != nil {
 		die("Unable to write to file %s, %s", jvmInfos.path, err)
 	}

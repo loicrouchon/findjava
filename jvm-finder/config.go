@@ -63,18 +63,11 @@ func loadConfig(defaultConfigPath string, name string) *Config {
 	configPaths := configPaths(name, defaultConfigPath)
 	for _, path := range configPaths {
 		if _, err := os.Stat(path); err == nil {
-			logDebug("Loading config from %s", path)
-			configEntry := ConfigEntry{
-				path: path,
-			}
-			file, _ := os.Open(path)
-			defer file.Close()
-			decoder := json.NewDecoder(file)
-			err := decoder.Decode(&configEntry)
-			if err != nil {
+			if configEntry, err := loadConfigFromFile(path); err != nil {
 				dierr(err)
+			} else {
+				configs = append(configs, configEntry)
 			}
-			configs = append(configs, configEntry)
 		} else {
 			logDebug("Config file %s not found: %v", path, err)
 		}
@@ -88,6 +81,18 @@ func loadConfig(defaultConfigPath string, name string) *Config {
 	}
 	logDebug("Resolved config: %s", &config)
 	return &config
+}
+
+func loadConfigFromFile(path string) (ConfigEntry, error) {
+	logDebug("Loading config from %s", path)
+	configEntry := ConfigEntry{
+		path: path,
+	}
+	file, _ := os.Open(path)
+	defer closeFile(file)
+	decoder := json.NewDecoder(file)
+	err := decoder.Decode(&configEntry)
+	return configEntry, err
 }
 
 func configPaths(name string, defaultConfigPath string) []string {
