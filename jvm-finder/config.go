@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -21,6 +20,7 @@ var defaultConfigEntry = ConfigEntry{
 		"/usr/local/bin/java",
 		"/usr/lib/jvm",
 		"~/.sdkman/candidates/java",
+		"$HOMEBREW_CELLAR/openjdk",
 	},
 	JvmVersionRange: &VersionRange{
 		Min: 0,
@@ -56,35 +56,6 @@ func (cfg ConfigEntry) String() string {
 	JvmLookupPaths: %v
 	JvmVersionRange: %s
 }`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, cfg.JvmVersionRange)
-}
-
-const allVersions = 0
-
-type VersionRange struct {
-	Min uint
-	Max uint
-}
-
-func (versionRange *VersionRange) String() string {
-	return fmt.Sprintf("[%s..%s]}", str(versionRange.Min), str(versionRange.Max))
-}
-
-func str(version uint) string {
-	if version == allVersions {
-		return ""
-	} else {
-		return strconv.Itoa(int(version))
-	}
-}
-
-func (versionRange *VersionRange) Matches(version uint) bool {
-	if versionRange.Min != allVersions && versionRange.Min > version {
-		return false
-	}
-	if versionRange.Max != allVersions && versionRange.Max < version {
-		return false
-	}
-	return true
 }
 
 func loadConfig(defaultConfigPath string, name string) *Config {

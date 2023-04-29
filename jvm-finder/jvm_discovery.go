@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -16,12 +17,16 @@ type JavaExecutable struct {
 	timestamp time.Time
 }
 
+func (javaExecutable *JavaExecutable) String() string {
+	return fmt.Sprintf(`{timestamp: %s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
+}
+
 func findAllJavaExecutables(javaLookUpPaths *[]string) JavaExecutables {
 	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range *javaLookUpPaths {
 		logDebug("Checking %s", javaLookUpPath)
 		for _, java := range findJavaExecutables(javaLookUpPath) {
-			logDebug("  - Found %v", java)
+			logDebug("  - Found %v", &java)
 			javaPaths[java.path] = java.timestamp
 		}
 	}

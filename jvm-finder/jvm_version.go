@@ -1,8 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
+
+const allVersions = 0
+
+type VersionRange struct {
+	Min uint
+	Max uint
+}
+
+func (versionRange *VersionRange) Matches(version uint) bool {
+	if versionRange.Min != allVersions && versionRange.Min > version {
+		return false
+	}
+	if versionRange.Max != allVersions && versionRange.Max < version {
+		return false
+	}
+	return true
+}
+
+func (versionRange *VersionRange) String() string {
+	return fmt.Sprintf("[%s..%s]}", str(versionRange.Min), str(versionRange.Max))
+}
+
+func str(version uint) string {
+	if version == allVersions {
+		return ""
+	} else {
+		return strconv.Itoa(int(version))
+	}
+}
 
 func parseVersion(version string) uint {
 	switch version {

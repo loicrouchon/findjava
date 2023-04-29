@@ -14,6 +14,7 @@ func TestLoadConfig(t *testing.T) {
 		"/usr/local/bin/java",
 		"/usr/lib/jvm",
 		"~/.sdkman/candidates/java",
+		"$HOMEBREW_CELLAR/openjdk",
 	})
 	defaultJvmVersionRange := &VersionRange{
 		Min: 0,

@@ -10,9 +10,9 @@ import (
 func main() {
 	args := parseArgs()
 	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
-	rules := jvmSelectionRules(args.minJavaVersion, args.maxJavaVersion, config)
 	javaExecutables := findAllJavaExecutables(&config.jvmsLookupPaths)
 	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)
+	rules := jvmSelectionRules(args.minJavaVersion, args.maxJavaVersion, config)
 	if jvm := jvmInfos.Select(rules); jvm != nil {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)
 		fmt.Printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
@@ -41,7 +41,7 @@ func parseArgs() *Args {
 	flag.Parse()
 	if len(flag.Args()) > 0 {
 		flag.Usage()
-		os.Exit(0)
+		os.Exit(1)
 	}
 	if err := setLogLevel(args.logLevel); err != nil {
 		dierr(err)
