@@ -1,4 +1,4 @@
-.PHONY: build test format clean run
+.PHONY: clean all format test build run
 
 BUILD_DIR=build
 JAVA_BUILD_DIR=$(BUILD_DIR)/classes
@@ -6,25 +6,26 @@ JAVA_INFO=$(JAVA_BUILD_DIR)/JvmInfo.class
 GO_BUILD_DIR=$(BUILD_DIR)/go
 MAIN_PROGRAM=$(GO_BUILD_DIR)/jvm-finder
 
+all: format test build
+
 build: $(JAVA_INFO) $(MAIN_PROGRAM)
 
 test: $(JAVA_INFO)
-	@cd jvm-finder && go test
-
+	@go test
 
 $(JAVA_INFO): JvmInfo.java
 	@mkdir -p "$(JAVA_BUILD_DIR)"
 	@javac --release 8 -d "$(JAVA_BUILD_DIR)" JvmInfo.java
 
-$(MAIN_PROGRAM): jvm-finder/*.go
+$(MAIN_PROGRAM): *.go
 	@mkdir -p "$(GO_BUILD_DIR)"
-	@cd jvm-finder && go build -ldflags "-s -w" -o "../$(MAIN_PROGRAM)" jvm-finder
+	@go build -ldflags "-s -w" -o "$(MAIN_PROGRAM)" jvm-finder
 
 format:
-	@cd jvm-finder && go fmt
+	@go fmt
 
 clean:
 	@rm  -rf "$(BUILD_DIR)"
 
 run: $(JAVA_INFO)
-	@cd jvm-finder && go run jvm-finder
+	@go run jvm-finder

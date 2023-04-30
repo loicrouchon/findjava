@@ -43,9 +43,9 @@ func fetchJvmInfo(javaPath string) *Jvm {
 	systemProperties := make(map[string]string)
 	for _, line := range lines {
 		split := strings.SplitN(line, "=", 2)
-		//if split[0] == "java.home" || split[0] == "java.specification.version" { // TODO remove the if
-		systemProperties[split[0]] = strings.TrimSpace(split[1])
-		//}
+		if len(split) == 2 {
+			systemProperties[split[0]] = strings.TrimSpace(split[1])
+		}
 	}
 	jvmInfo := Jvm{
 		javaPath:         javaPath,
