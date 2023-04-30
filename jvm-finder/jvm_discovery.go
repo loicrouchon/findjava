@@ -18,7 +18,7 @@ type JavaExecutable struct {
 }
 
 func (javaExecutable *JavaExecutable) String() string {
-	return fmt.Sprintf(`{timestamp: %s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
+	return fmt.Sprintf(`{timestamp: %-30s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
 }
 
 func findAllJavaExecutables(javaLookUpPaths *[]string) JavaExecutables {
