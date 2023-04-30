@@ -31,7 +31,7 @@ func TestJvmSelectionRules(t *testing.T) {
 func TestJvmSelectionRulesMatches(t *testing.T) {
 	type TestData struct {
 		rules       JvmSelectionRules
-		jvmInfo     JvmInfo
+		jvmInfo     Jvm
 		shouldMatch bool
 	}
 	testData := []TestData{
@@ -119,8 +119,8 @@ func TestJvmSelectionRulesMatches(t *testing.T) {
 	}
 }
 
-func jvmWithVersion(version uint) JvmInfo {
-	return JvmInfo{
+func jvmWithVersion(version uint) Jvm {
+	return Jvm{
 		javaHome:                 "/jvm",
 		javaSpecificationVersion: version,
 	}

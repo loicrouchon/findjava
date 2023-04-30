@@ -8,11 +8,11 @@ type JvmSelectionRules struct {
 	versionRange *VersionRange
 }
 
-func (rules *JvmSelectionRules) Matches(jvmInfo *JvmInfo) bool {
+func (rules *JvmSelectionRules) Matches(jvmInfo *Jvm) bool {
 	return rules.versionRange.Matches(jvmInfo.javaSpecificationVersion)
 }
 
-func (rules JvmSelectionRules) String() string {
+func (rules *JvmSelectionRules) String() string {
 	return fmt.Sprintf("%v", rules.versionRange)
 }
 

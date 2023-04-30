@@ -4,9 +4,9 @@ import (
 	"sort"
 )
 
-func (jvmInfos *JvmsInfos) Select(rules *JvmSelectionRules) *JvmInfo {
-	var matchingJvms []JvmInfo
-	for _, jvmInfo := range jvmInfos.Jvms {
+func (jvms *JvmsInfos) Select(rules *JvmSelectionRules) *Jvm {
+	var matchingJvms []Jvm
+	for _, jvmInfo := range jvms.Jvms {
 		if rules.Matches(jvmInfo) {
 			matchingJvms = append(matchingJvms, *jvmInfo)
 			logInfo("[CANDIDATE] %s (%d)", jvmInfo.javaHome, jvmInfo.javaSpecificationVersion)
