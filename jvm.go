@@ -11,12 +11,14 @@ type Jvm struct {
 	javaPath                 string
 	javaHome                 string
 	javaSpecificationVersion uint
+	javaVendor               string
 	FetchedAt                time.Time
 	SystemProperties         map[string]string
 }
 
 func (jvm *Jvm) rebuild() {
 	jvm.javaHome = jvm.SystemProperties["java.home"]
+	jvm.javaVendor = jvm.SystemProperties["java.vendor"]
 	jvm.javaSpecificationVersion = parseVersion(jvm.SystemProperties["java.specification.version"])
 }
 
