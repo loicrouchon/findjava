@@ -16,20 +16,20 @@ var console = Console{
 	stderr: os.Stderr,
 }
 
+func (console *Console) printf(message string, v ...any) {
+	_, _ = fmt.Fprintf(console.stdout, message, v...)
+}
+
+func (console *Console) eprintf(message string, v ...any) {
+	_, _ = fmt.Fprintf(console.stderr, message, v...)
+}
+
 const logLevelError = 0
 const logLevelWarning = logLevelError + 1
 const logLevelInfo = logLevelWarning + 1
 const logLevelDebug = logLevelInfo + 1
 
 var currentLogLevel uint
-
-func wrapErr(err error, message string, v ...any) error {
-	return fmt.Errorf("%s\n\t%s", fmt.Sprintf(message, v...), err)
-}
-
-func printf(message string, v ...any) {
-	fmt.Fprintf(console.stdout, message, v...)
-}
 
 func setLogLevel(level string) error {
 	switch level {
@@ -50,28 +50,32 @@ func setLogLevel(level string) error {
 
 func logDebug(message string, v ...any) {
 	if currentLogLevel >= logLevelDebug {
-		fmt.Fprintf(console.stdout, "[DEBUG] %s\n", fmt.Sprintf(message, v...))
+		console.printf("[DEBUG] %s\n", fmt.Sprintf(message, v...))
 	}
 }
 func logInfo(message string, v ...any) {
 	if currentLogLevel >= logLevelInfo {
-		fmt.Fprintf(console.stdout, "[INFO] %s\n", fmt.Sprintf(message, v...))
+		console.printf("[INFO] %s\n", fmt.Sprintf(message, v...))
 	}
 }
 
 func logWarn(err error) {
 	if currentLogLevel >= logLevelWarning {
-		fmt.Fprintf(console.stderr, "[WARNING] %s\n", err)
+		console.eprintf("[WARNING] %s\n", err)
 	}
 }
 
 func logErr(err error) {
 	if currentLogLevel >= logLevelError {
-		fmt.Fprintf(console.stderr, "[ERROR] %s\n", err)
+		console.eprintf("[ERROR] %s\n", err)
 	}
 }
 
 func die(err error) {
 	logErr(err)
 	os.Exit(1)
+}
+
+func wrapErr(err error, message string, v ...any) error {
+	return fmt.Errorf("%s\n\t%s", fmt.Sprintf(message, v...), err)
 }

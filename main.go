@@ -27,7 +27,7 @@ func main() {
 	if jvms := jvmInfos.Select(rules); len(jvms) > 0 {
 		jvm := jvms[0]
 		logJvmList("[SELECTED]", jvms[0:1])
-		printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
+		console.printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
 	} else {
 		die(fmt.Errorf("unable to find a JVM matching requirements %s", rules))
 	}
