@@ -18,7 +18,10 @@ func main() {
 	if err != nil {
 		dierr(err)
 	}
-	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)
+	jvmInfos, err := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)
+	if err != nil {
+		dierr(err)
+	}
 	rules := jvmSelectionRules(config, args.minJavaVersion, args.maxJavaVersion, args.vendors)
 	if jvm := jvmInfos.Select(rules); jvm != nil {
 		logInfo("[SELECTED]  %s (%d)", jvm.javaHome, jvm.javaSpecificationVersion)

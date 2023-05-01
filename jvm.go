@@ -35,11 +35,11 @@ java.specification.version: %d
 		jvm.javaSpecificationVersion)
 }
 
-func fetchJvmInfo(javaPath string) *Jvm {
+func fetchJvmInfo(javaPath string) (*Jvm, error) {
 	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		die("Fail to call %s %s", javaPath, err)
+		return nil, wrapErr(err, "fail to call %s ", javaPath)
 	}
 	lines := strings.Split(string(output), "\n")
 	systemProperties := make(map[string]string)
@@ -55,5 +55,5 @@ func fetchJvmInfo(javaPath string) *Jvm {
 		SystemProperties: systemProperties,
 	}
 	jvmInfo.rebuild()
-	return &jvmInfo
+	return &jvmInfo, nil
 }

@@ -13,13 +13,15 @@ type JvmsInfos struct {
 	Jvms       map[string]*Jvm
 }
 
-func loadJvmsInfos(path string, javaPaths *JavaExecutables) JvmsInfos {
+func loadJvmsInfos(path string, javaPaths *JavaExecutables) (JvmsInfos, error) {
 	jvmInfos := loadJvmsInfosFromCache(path)
 	for javaPath, modTime := range javaPaths.javaPaths {
-		jvmInfos.Fetch(javaPath, modTime)
+		if err := jvmInfos.Fetch(javaPath, modTime); err != nil {
+			return JvmsInfos{}, err
+		}
 	}
 	jvmInfos.Save()
-	return jvmInfos
+	return jvmInfos, nil
 }
 
 func loadJvmsInfosFromCache(path string) JvmsInfos {
@@ -29,52 +31,61 @@ func loadJvmsInfosFromCache(path string) JvmsInfos {
 		fetched:    make(map[string]bool),
 		Jvms:       make(map[string]*Jvm),
 	}
+	// Failures to load will from cache will result in an empty JvmsInfos
+	// which will cause every discovered JVM to be fetched
 	if _, err := os.Stat(path); err == nil {
 		logDebug("Loading cache from %s", path)
-		file, _ := os.Open(path)
-		defer closeFile(file)
-		decoder := json.NewDecoder(file)
-		err := decoder.Decode(&jvmsInfos)
-		if err != nil {
-			dierr(err)
+		if file, err := os.Open(path); err == nil {
+			defer closeFile(file)
+			decoder := json.NewDecoder(file)
+			if err := decoder.Decode(&jvmsInfos); err == nil {
+				for javaPath, jvm := range jvmsInfos.Jvms {
+					jvm.javaPath = javaPath
+					jvm.rebuild()
+				}
+				//logDebug("JVMs rebuilt loaded from cache: %#v", jvmsInfos)
+			} else {
+				logErr(wrapErr(err, "cannot read config file %s:", path))
+			}
+		} else {
+			logErr(wrapErr(err, "cannot read config file %s:", path))
 		}
-		for javaPath, jvm := range jvmsInfos.Jvms {
-			jvm.javaPath = javaPath
-			jvm.rebuild()
-		}
-		// logDebug("JVMs rebuilt loaded from cache: %#v", jvmsInfos)
 	}
 	return jvmsInfos
 }
 
-func (jvms *JvmsInfos) Fetch(javaPath string, modTime time.Time) {
-	var jvmInfo *Jvm
+func (jvms *JvmsInfos) Fetch(javaPath string, modTime time.Time) error {
+	jvms.fetched[javaPath] = true
 	if info, found := jvms.Jvms[javaPath]; !found {
 		logInfo("[CACHE MISS] %s", javaPath)
-		jvmInfo = jvms.doFetch(javaPath)
+		return jvms.doFetch(javaPath)
 	} else if modTime.After(info.FetchedAt) {
 		logInfo("[CACHE OUTDATED] %s", javaPath)
-		jvmInfo = jvms.doFetch(javaPath)
+		return jvms.doFetch(javaPath)
 	} else {
-		jvmInfo = info
+		return nil
 	}
-	jvms.fetched[javaPath] = true
-	jvms.Jvms[javaPath] = jvmInfo
 }
 
-func (jvms *JvmsInfos) doFetch(javaPath string) *Jvm {
-	jvmInfo := fetchJvmInfo(javaPath)
+func (jvms *JvmsInfos) doFetch(javaPath string) error {
+	jvm, err := fetchJvmInfo(javaPath)
+	if err != nil {
+		return err
+	}
+	logDebug("%s:\n%s", javaPath, jvm)
+	jvms.Jvms[javaPath] = jvm
 	jvms.dirtyCache = true
-	logDebug("%s:\n%s", javaPath, jvmInfo)
-	return jvmInfo
+	return nil
 }
 
-func (jvms *JvmsInfos) Save() {
+func (jvms *JvmsInfos) Save() error {
 	for javaPath, jvmInfo := range jvms.Jvms {
 		if value, found := jvms.fetched[javaPath]; !found || !value {
 			if fileInfo, err := os.Stat(javaPath); err == nil {
 				if fileInfo.ModTime().After(jvmInfo.FetchedAt) {
-					jvms.doFetch(javaPath)
+					if err := jvms.doFetch(javaPath); err != nil {
+						return err
+					}
 				}
 			} else {
 				delete(jvms.Jvms, javaPath)
@@ -83,15 +94,19 @@ func (jvms *JvmsInfos) Save() {
 		}
 	}
 	if jvms.dirtyCache {
-		writeToJson(jvms)
+		return writeToJson(jvms)
 	}
+	return nil
 }
 
-func writeToJson(jvmInfos *JvmsInfos) {
+func writeToJson(jvmInfos *JvmsInfos) error {
 	logDebug("Writing JVMs infos cache to %s", jvmInfos.path)
-	file, _ := json.MarshalIndent(jvmInfos, "", "  ")
-	err := os.WriteFile(jvmInfos.path, file, 0644)
+	file, err := json.MarshalIndent(jvmInfos, "", "  ")
 	if err != nil {
-		die("Unable to write to file %s, %s", jvmInfos.path, err)
+		return err
 	}
+	if err := os.WriteFile(jvmInfos.path, file, 0644); err != nil {
+		return wrapErr(err, "unable to write to file %s", jvmInfos.path)
+	}
+	return nil
 }

@@ -22,6 +22,10 @@ const logLevelError = 0
 
 var currentLogLevel uint
 
+func wrapErr(err error, message string, v ...any) error {
+	return fmt.Errorf("%s\n\t%s", fmt.Sprintf(message, v...), err)
+}
+
 func printf(message string, v ...any) {
 	fmt.Fprintf(console.stdout, message, v...)
 }
