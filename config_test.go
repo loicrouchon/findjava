@@ -1,7 +1,7 @@
 package main
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 )
 
@@ -59,18 +59,12 @@ func TestLoadConfig(t *testing.T) {
 			JvmVersionRange: defaultJvmVersionRange,
 		},
 	}
-	for path, expectedConfigEntry := range data {
-		actualConfig := loadConfig(path, defaultKey)
-		actualJvmLookupPath := actualConfig.jvmsLookupPaths
-		if !reflect.DeepEqual(actualJvmLookupPath, expectedConfigEntry.JvmLookupPaths) {
-			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmLookupPaths() == %v but was %v`,
-				path, defaultKey, expectedConfigEntry.JvmLookupPaths, actualJvmLookupPath)
-		}
-		actualJvmVersionRange := actualConfig.jvmVersionRange
-		if !reflect.DeepEqual(actualJvmVersionRange, *(expectedConfigEntry.JvmVersionRange)) {
-			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmVersionRange() == %v but was %v`,
-				path, defaultKey, *expectedConfigEntry.JvmVersionRange, actualJvmVersionRange)
-		}
+	for path, expected := range data {
+		actual, err := loadConfig(path, defaultKey)
+		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, defaultKey)
+		assertNoError(t, description, err)
+		assertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.jvmsLookupPaths)
+		assertEquals(t, description+".jvmVersionRange()", *expected.JvmVersionRange, actual.jvmVersionRange)
 	}
 }
 
@@ -96,18 +90,12 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 			},
 		},
 	}
-	for key, expectedConfigEntry := range data {
+	for key, expected := range data {
 		path := "test-resources/full-config.json"
-		actualConfig := loadConfig(path, key)
-		actualJvmLookupPath := actualConfig.jvmsLookupPaths
-		if !reflect.DeepEqual(actualJvmLookupPath, expectedConfigEntry.JvmLookupPaths) {
-			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmLookupPaths() == %v but was %v`,
-				path, defaultKey, expectedConfigEntry.JvmLookupPaths, actualJvmLookupPath)
-		}
-		actualJvmVersionRange := actualConfig.jvmVersionRange
-		if !reflect.DeepEqual(actualJvmVersionRange, *(expectedConfigEntry.JvmVersionRange)) {
-			t.Fatalf(`Expecting loadConfig("%s", "%s").jvmVersionRange() == %v but was %v`,
-				path, defaultKey, *expectedConfigEntry.JvmVersionRange, actualJvmVersionRange)
-		}
+		actual, err := loadConfig(path, key)
+		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, key)
+		assertNoError(t, description, err)
+		assertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.jvmsLookupPaths)
+		assertEquals(t, description+".jvmVersionRange()", *expected.JvmVersionRange, actual.jvmVersionRange)
 	}
 }

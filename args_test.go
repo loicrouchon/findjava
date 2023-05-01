@@ -80,7 +80,7 @@ func TestParseArgsErrors(t *testing.T) {
 		err:  "flag provided but not defined: -unknown-flag",
 	}, {
 		args: []string{"unresolved argument"},
-		err:  "Unresolved arguments: [unresolved argument]",
+		err:  "unresolved arguments: [unresolved argument]",
 	}, {
 		args: []string{"--log-level=xoxo"},
 		err:  "invalid log level: 'xoxo'. Available levels are: debug, info, error",

@@ -10,7 +10,10 @@ func main() {
 	if err != nil {
 		dierr(err)
 	}
-	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
+	config, err := loadConfig("/etc/jvm-finder/config.json", args.configKey)
+	if err != nil {
+		dierr(err)
+	}
 	javaExecutables := findAllJavaExecutables(&config.jvmsLookupPaths)
 	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)
 	rules := jvmSelectionRules(config, args.minJavaVersion, args.maxJavaVersion, args.vendors)

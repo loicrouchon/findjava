@@ -58,13 +58,13 @@ func (cfg ConfigEntry) String() string {
 }`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, cfg.JvmVersionRange)
 }
 
-func loadConfig(defaultConfigPath string, name string) *Config {
+func loadConfig(defaultConfigPath string, name string) (*Config, error) {
 	var configs []ConfigEntry
 	configPaths := configPaths(name, defaultConfigPath)
 	for _, path := range configPaths {
 		if _, err := os.Stat(path); err == nil {
 			if configEntry, err := loadConfigFromFile(path); err != nil {
-				dierr(err)
+				return nil, err
 			} else {
 				configs = append(configs, configEntry)
 			}
@@ -73,14 +73,30 @@ func loadConfig(defaultConfigPath string, name string) *Config {
 		}
 	}
 	configs = append(configs, defaultConfigEntry)
+	return parseConfig(configs)
+}
+
+func parseConfig(configs []ConfigEntry) (*Config, error) {
 	logDebug("Config entries: %v", configs)
+	path, err := jvmsMetadataCachePath(configs)
+	if err != nil {
+		return nil, err
+	}
+	lookupPaths, err := jvmsLookupPaths(configs)
+	if err != nil {
+		return nil, err
+	}
+	versionRange, err := jvmVersionRange(configs)
+	if err != nil {
+		return nil, err
+	}
 	config := Config{
-		jvmsMetadataCachePath: jvmsMetadataCachePath(configs),
-		jvmsLookupPaths:       jvmsLookupPaths(configs),
-		jvmVersionRange:       jvmVersionRange(configs),
+		jvmsMetadataCachePath: path,
+		jvmsLookupPaths:       lookupPaths,
+		jvmVersionRange:       versionRange,
 	}
 	logDebug("Resolved config: %s", &config)
-	return &config
+	return &config, nil
 }
 
 func loadConfigFromFile(path string) (ConfigEntry, error) {
@@ -104,37 +120,34 @@ func configPaths(name string, defaultConfigPath string) []string {
 	}
 }
 
-func jvmsMetadataCachePath(configs []ConfigEntry) string {
+func jvmsMetadataCachePath(configs []ConfigEntry) (string, error) {
 	for _, cfg := range configs {
 		if cfg.JvmsMetadataCachePath != "" {
 			return resolvePath(cfg.JvmsMetadataCachePath)
 		}
 	}
-	die("no JVMs metadata cache path defined in configuration files %v", paths(configs))
-	panic("unreachable")
+	return "", fmt.Errorf("no JVMs metadata cache path defined in configuration files %v\n", paths(configs))
 }
 
-func jvmsLookupPaths(configs []ConfigEntry) []string {
+func jvmsLookupPaths(configs []ConfigEntry) ([]string, error) {
 	for _, cfg := range configs {
 		if len(cfg.JvmLookupPaths) > 0 {
 			resolvedPaths := resolvePaths(cfg.JvmLookupPaths)
 			if len(resolvedPaths) > 0 {
-				return resolvedPaths
+				return resolvedPaths, nil
 			}
 		}
 	}
-	die("no JVMs lookup path defined in configuration files %v", paths(configs))
-	panic("unreachable")
+	return nil, fmt.Errorf("no JVMs lookup path defined in configuration files %v\n", paths(configs))
 }
 
-func jvmVersionRange(configs []ConfigEntry) VersionRange {
+func jvmVersionRange(configs []ConfigEntry) (VersionRange, error) {
 	for _, cfg := range configs {
 		if cfg.JvmVersionRange != nil {
-			return *cfg.JvmVersionRange
+			return *cfg.JvmVersionRange, nil
 		}
 	}
-	die("no version range defined in configuration files %v", paths(configs))
-	panic("unreachable")
+	return VersionRange{}, fmt.Errorf("no version range defined in configuration files %v\n", paths(configs))
 }
 
 func paths(configs []ConfigEntry) []string {
