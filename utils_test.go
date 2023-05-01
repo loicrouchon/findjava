@@ -1,0 +1,43 @@
+package main
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func assertEquals(t *testing.T, description string, expected any, actual any) {
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf(`Expecting
+    %s
+to be equal to:
+    %#v
+but got:
+    %#v`,
+			description, expected, actual)
+	}
+}
+
+func assertErrorEquals(t *testing.T, description string, expected error, actual error) {
+	if actual != expected {
+		t.Fatalf(`Expecting
+    %s
+to fail with:
+    %v
+but got:
+    %v`,
+			description, expected, actual)
+	}
+}
+
+func assertErrorContains(t *testing.T, description string, expected string, actual error) {
+	if !strings.Contains(actual.Error(), expected) {
+		t.Fatalf(`Expecting error
+    %s
+to contain message:
+    %v
+but got:
+    %v`,
+			description, expected, actual)
+	}
+}

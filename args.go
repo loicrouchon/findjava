@@ -47,7 +47,7 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 	}
 	if unresolvedArgs := cmd.Args(); len(unresolvedArgs) > 0 {
 		cmd.Usage()
-		return nil, fmt.Errorf("Invalid arguments: %v\n%s", unresolvedArgs, output)
+		return nil, fmt.Errorf("Unresolved arguments: %v\n%s", unresolvedArgs, output)
 	}
 	if err := setLogLevel(args.logLevel); err != nil {
 		return nil, fmt.Errorf("%s", err)

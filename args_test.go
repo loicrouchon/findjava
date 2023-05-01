@@ -1,8 +1,7 @@
 package main
 
 import (
-	"reflect"
-	"strings"
+	"fmt"
 	"testing"
 )
 
@@ -10,6 +9,7 @@ func TestParseArgs(t *testing.T) {
 	type TestData struct {
 		args     []string
 		expected Args
+		err      error
 	}
 	data := []TestData{{
 		args: []string{},
@@ -63,12 +63,33 @@ func TestParseArgs(t *testing.T) {
 		},
 	}}
 	for _, data := range data {
-		console := setTestConsole()
-		actual := ParseArgs(data.args)
-		if !reflect.DeepEqual(actual, &data.expected) {
-			t.Fatalf(`Expecting ParseArgs(%#v) == %#v but was %#v`,
-				strings.Join(data.args, `", "`), data.expected, actual)
-		}
-		console.hasMessages(t, []string{}, []string{})
+		actual, err := ParseArgs(data.args)
+		description := fmt.Sprintf("ParseArgs(%#v)", data.args)
+		assertErrorEquals(t, description, data.err, err)
+		assertEquals(t, description, &data.expected, actual)
+	}
+}
+
+func TestParseArgsErrors(t *testing.T) {
+	type TestData struct {
+		args []string
+		err  string
+	}
+	data := []TestData{{
+		args: []string{"--unknown-flag"},
+		err:  "flag provided but not defined: -unknown-flag",
+	}, {
+		args: []string{"unresolved argument"},
+		err:  "Unresolved arguments: [unresolved argument]",
+	}, {
+		args: []string{"--log-level=xoxo"},
+		err:  "invalid log level: 'xoxo'. Available levels are: debug, info, error",
+	}}
+	for _, data := range data {
+		actual, err := ParseArgs(data.args)
+		description := fmt.Sprintf("ParseArgs(%#v)", data.args)
+		var nothing *Args
+		assertEquals(t, description, nothing, actual)
+		assertErrorContains(t, description, data.err, err)
 	}
 }
