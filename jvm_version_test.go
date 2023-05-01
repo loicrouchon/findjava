@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 )
@@ -20,11 +21,23 @@ func TestParseVersion(t *testing.T) {
 	for i := 1; i < 25; i++ {
 		versions[strconv.Itoa(i)] = uint(i)
 	}
-	for versionToParse, expectedVersion := range versions {
-		parsedVersion := parseVersion(versionToParse)
-		if parsedVersion != expectedVersion {
-			t.Fatalf(`Expecting parseVersion(%s) == %d but was %d`,
-				versionToParse, expectedVersion, parsedVersion)
-		}
+	for versionToParse, expected := range versions {
+		actual, err := parseJavaSpecificationVersion(versionToParse)
+		description := fmt.Sprintf("parseJavaSpecificationVersion(%s)", versionToParse)
+		assertNoError(t, description, err)
+		assertEquals(t, description, expected, actual)
+	}
+}
+
+func TestParseVersionError(t *testing.T) {
+	versions := map[string]string{
+		"":    "JVM version '' cannot be parsed as an unsigned int",
+		"-1":  "JVM version '-1' cannot be parsed as an unsigned int",
+		"one": "JVM version 'one' cannot be parsed as an unsigned int",
+	}
+	for versionToParse, expected := range versions {
+		_, err := parseJavaSpecificationVersion(versionToParse)
+		description := fmt.Sprintf("parseJavaSpecificationVersion(%s)", versionToParse)
+		assertErrorContains(t, description, expected, err)
 	}
 }

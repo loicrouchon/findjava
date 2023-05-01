@@ -13,7 +13,7 @@ func TestResolvePath(t *testing.T) {
 	}
 	var userHome string
 	if u, err := user.Current(); err != nil {
-		dierr(err)
+		die(err)
 	} else {
 		userHome = u.HomeDir
 	}

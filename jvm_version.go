@@ -34,29 +34,31 @@ func str(version uint) string {
 	}
 }
 
-func parseVersion(version string) uint {
+func parseJavaSpecificationVersion(version string) (uint, error) {
+	var javaSpecificationVersion uint
 	switch version {
 	case "1.0", "1.1":
-		return 1
+		javaSpecificationVersion = 1
 	case "1.2":
-		return 2
+		javaSpecificationVersion = 2
 	case "1.3":
-		return 3
+		javaSpecificationVersion = 3
 	case "1.4":
-		return 4
+		javaSpecificationVersion = 4
 	case "1.5":
-		return 5
+		javaSpecificationVersion = 5
 	case "1.6":
-		return 6
+		javaSpecificationVersion = 6
 	case "1.7":
-		return 7
+		javaSpecificationVersion = 7
 	case "1.8":
-		return 8
+		javaSpecificationVersion = 8
 	default:
 		v, err := strconv.Atoi(version)
 		if err != nil || v < 0 {
-			die("JVM version %s cannot be parsed as an unsigned int", version)
+			return 0, fmt.Errorf("JVM version '%s' cannot be parsed as an unsigned int", version)
 		}
-		return uint(v)
+		javaSpecificationVersion = uint(v)
 	}
+	return javaSpecificationVersion, nil
 }

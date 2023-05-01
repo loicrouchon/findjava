@@ -41,14 +41,17 @@ func loadJvmsInfosFromCache(path string) JvmsInfos {
 			if err := decoder.Decode(&jvmsInfos); err == nil {
 				for javaPath, jvm := range jvmsInfos.Jvms {
 					jvm.javaPath = javaPath
-					jvm.rebuild()
+					if err := jvm.rebuild(); err != nil {
+						delete(jvmsInfos.Jvms, javaPath)
+						logWarn(wrapErr(err, "cannot parse java specification version for JVM %s:", path))
+					}
 				}
 				//logDebug("JVMs rebuilt loaded from cache: %#v", jvmsInfos)
 			} else {
-				logErr(wrapErr(err, "cannot read config file %s:", path))
+				logWarn(wrapErr(err, "cannot read config file %s:", path))
 			}
 		} else {
-			logErr(wrapErr(err, "cannot read config file %s:", path))
+			logWarn(wrapErr(err, "cannot read config file %s:", path))
 		}
 	}
 	return jvmsInfos

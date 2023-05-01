@@ -16,9 +16,10 @@ var console = Console{
 	stderr: os.Stderr,
 }
 
-const logLevelDebug = 2
-const logLevelInfo = 1
 const logLevelError = 0
+const logLevelWarning = logLevelError + 1
+const logLevelInfo = logLevelWarning + 1
+const logLevelDebug = logLevelInfo + 1
 
 var currentLogLevel uint
 
@@ -36,11 +37,13 @@ func setLogLevel(level string) error {
 		currentLogLevel = logLevelDebug
 	case "info":
 		currentLogLevel = logLevelInfo
+	case "warn":
+		currentLogLevel = logLevelWarning
 	case "error":
 		currentLogLevel = logLevelError
 	default:
 		currentLogLevel = logLevelError
-		return fmt.Errorf("invalid log level: '%s'. Available levels are: debug, info, error", level)
+		return fmt.Errorf("invalid log level: '%s'. Available levels are: debug, info, warn, error", level)
 	}
 	return nil
 }
@@ -56,9 +59,9 @@ func logInfo(message string, v ...any) {
 	}
 }
 
-func logError(message string, v ...any) {
-	if currentLogLevel >= logLevelError {
-		fmt.Fprintf(console.stderr, "[ERROR] %s\n", fmt.Sprintf(message, v...))
+func logWarn(err error) {
+	if currentLogLevel >= logLevelWarning {
+		fmt.Fprintf(console.stderr, "[WARNING] %s\n", err)
 	}
 }
 
@@ -68,12 +71,7 @@ func logErr(err error) {
 	}
 }
 
-func die(message string, v ...any) {
-	logError(message, v...)
-	os.Exit(1)
-}
-
-func dierr(err error) {
+func die(err error) {
 	logErr(err)
 	os.Exit(1)
 }

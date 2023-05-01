@@ -33,7 +33,7 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 	output := bytes.NewBufferString("")
 	cmd.SetOutput(output)
 	cmd.StringVar(&args.logLevel, "log-level", "error",
-		"Sets the log level to one of: debug, info, error")
+		"Sets the log level to one of: debug, info, warn, error")
 	cmd.StringVar(&args.configKey, "config-key", "",
 		"If specified, will look for an optional config.<KEY>.json to load before loading the default configuration")
 	cmd.UintVar(&args.minJavaVersion, "min-java-version", allVersions,

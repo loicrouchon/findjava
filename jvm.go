@@ -16,10 +16,15 @@ type Jvm struct {
 	SystemProperties         map[string]string
 }
 
-func (jvm *Jvm) rebuild() {
+func (jvm *Jvm) rebuild() error {
 	jvm.javaHome = jvm.SystemProperties["java.home"]
 	jvm.javaVendor = jvm.SystemProperties["java.vendor"]
-	jvm.javaSpecificationVersion = parseVersion(jvm.SystemProperties["java.specification.version"])
+	if specVersion, err := parseJavaSpecificationVersion(jvm.SystemProperties["java.specification.version"]); err != nil {
+		return err
+	} else {
+		jvm.javaSpecificationVersion = specVersion
+	}
+	return nil
 }
 
 func (jvm *Jvm) String() string {
@@ -54,6 +59,8 @@ func fetchJvmInfo(javaPath string) (*Jvm, error) {
 		FetchedAt:        time.Now(),
 		SystemProperties: systemProperties,
 	}
-	jvmInfo.rebuild()
+	if err := jvmInfo.rebuild(); err != nil {
+		return nil, err
+	}
 	return &jvmInfo, nil
 }

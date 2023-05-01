@@ -83,7 +83,7 @@ func TestParseArgsErrors(t *testing.T) {
 		err:  "unresolved arguments: [unresolved argument]",
 	}, {
 		args: []string{"--log-level=xoxo"},
-		err:  "invalid log level: 'xoxo'. Available levels are: debug, info, error",
+		err:  "invalid log level: 'xoxo'. Available levels are: debug, info, warn, error",
 	}}
 	for _, data := range data {
 		actual, err := ParseArgs(data.args)

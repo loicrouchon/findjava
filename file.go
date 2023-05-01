@@ -5,6 +5,6 @@ import "os"
 func closeFile(file *os.File) {
 	err := file.Close()
 	if err != nil {
-		dierr(err)
+		die(err)
 	}
 }
