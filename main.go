@@ -6,7 +6,10 @@ import (
 )
 
 func main() {
-	args := ParseArgs(os.Args[1:])
+	args, err := ParseArgs(os.Args[1:])
+	if err != nil {
+		dierr(err)
+	}
 	config := loadConfig("/etc/jvm-finder/config.json", args.configKey)
 	javaExecutables := findAllJavaExecutables(&config.jvmsLookupPaths)
 	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)

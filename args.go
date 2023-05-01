@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -25,30 +27,30 @@ func (i *list) Set(value string) error {
 	return nil
 }
 
-func ParseArgs(commandArgs []string) *Args {
+func ParseArgs(commandArgs []string) (*Args, error) {
 	args := Args{}
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flag.StringVar(&args.logLevel, "log-level", "error",
+	cmd := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	output := bytes.NewBufferString("")
+	cmd.SetOutput(output)
+	cmd.StringVar(&args.logLevel, "log-level", "error",
 		"Sets the log level to one of: debug, info, error")
-	flag.StringVar(&args.configKey, "config-key", "",
+	cmd.StringVar(&args.configKey, "config-key", "",
 		"If specified, will look for an optional config.<KEY>.json to load before loading the default configuration")
-	flag.UintVar(&args.minJavaVersion, "min-java-version", allVersions,
+	cmd.UintVar(&args.minJavaVersion, "min-java-version", allVersions,
 		"The minimum (inclusive) Java Language Specification version the found JVMs should provide")
-	flag.UintVar(&args.maxJavaVersion, "max-java-version", allVersions,
+	cmd.UintVar(&args.maxJavaVersion, "max-java-version", allVersions,
 		"The maximum (inclusive) Java Language Specification version the found JVMs should provide")
-	flag.Var(&args.vendors, "vendors",
+	cmd.Var(&args.vendors, "vendors",
 		"The vendors to filter on. If empty, no vendor filtering will be done")
-	if err := flag.CommandLine.Parse(commandArgs); err != nil {
-		logErr(err)
-		flag.Usage()
-		os.Exit(1)
+	if err := cmd.Parse(commandArgs); err != nil {
+		return nil, fmt.Errorf("%s\n%s", err, output)
 	}
-	if len(flag.Args()) > 0 {
-		flag.Usage()
-		os.Exit(1)
+	if unresolvedArgs := cmd.Args(); len(unresolvedArgs) > 0 {
+		cmd.Usage()
+		return nil, fmt.Errorf("Invalid arguments: %v\n%s", unresolvedArgs, output)
 	}
 	if err := setLogLevel(args.logLevel); err != nil {
-		dierr(err)
+		return nil, fmt.Errorf("%s", err)
 	}
-	return &args
+	return &args, nil
 }
