@@ -14,7 +14,10 @@ func main() {
 	if err != nil {
 		dierr(err)
 	}
-	javaExecutables := findAllJavaExecutables(&config.jvmsLookupPaths)
+	javaExecutables, err := findAllJavaExecutables(&config.jvmsLookupPaths)
+	if err != nil {
+		dierr(err)
+	}
 	jvmInfos := loadJvmsInfos(config.jvmsMetadataCachePath, &javaExecutables)
 	rules := jvmSelectionRules(config, args.minJavaVersion, args.maxJavaVersion, args.vendors)
 	if jvm := jvmInfos.Select(rules); jvm != nil {

@@ -21,32 +21,36 @@ func (javaExecutable *JavaExecutable) String() string {
 	return fmt.Sprintf(`{timestamp: %-30s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
 }
 
-func findAllJavaExecutables(javaLookUpPaths *[]string) JavaExecutables {
+func findAllJavaExecutables(javaLookUpPaths *[]string) (JavaExecutables, error) {
 	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range *javaLookUpPaths {
 		logDebug("Checking %s", javaLookUpPath)
-		for _, java := range findJavaExecutables(javaLookUpPath) {
+		javaExecutables, err := findJavaExecutables(javaLookUpPath)
+		if err != nil {
+			return JavaExecutables{}, err
+		}
+		for _, java := range javaExecutables {
 			logDebug("  - Found %v", &java)
 			javaPaths[java.path] = java.timestamp
 		}
 	}
-	return JavaExecutables{javaPaths: javaPaths}
+	return JavaExecutables{javaPaths: javaPaths}, nil
 }
 
-func findJavaExecutables(lookUpPath string) []JavaExecutable {
+func findJavaExecutables(lookUpPath string) ([]JavaExecutable, error) {
 	if path, err := filepath.EvalSymlinks(lookUpPath); err == nil {
 		if fileInfo, err := os.Stat(path); err == nil {
 			fileMode := fileInfo.Mode()
 			if fileMode.IsRegular() {
-				return javaExecutable(path, fileInfo)
+				return javaExecutable(path, fileInfo), nil
 			} else if fileInfo.Mode().IsDir() {
 				return javaExecutablesForEachJvmDirectory(path)
 			} else {
-				die("File %s (symlinked from %s) cannot be processed :(", path, lookUpPath)
+				return nil, fmt.Errorf("file %s (symlinked from %s) cannot be processed :(", path, lookUpPath)
 			}
 		}
 	}
-	return []JavaExecutable{}
+	return []JavaExecutable{}, nil
 }
 
 func javaExecutable(path string, fileInfo fs.FileInfo) []JavaExecutable {
@@ -61,26 +65,30 @@ func javaExecutable(path string, fileInfo fs.FileInfo) []JavaExecutable {
 	}
 }
 
-func javaExecutablesForEachJvmDirectory(directory string) []JavaExecutable {
-	if java := findJavaExecutables(filepath.Join(directory, "bin", "java")); len(java) == 1 {
-		return java
+func javaExecutablesForEachJvmDirectory(directory string) ([]JavaExecutable, error) {
+	if java, err := findJavaExecutables(filepath.Join(directory, "bin", "java")); len(java) == 1 {
+		return nil, err
 	}
 	dir, err := os.Open(directory)
 	if err != nil {
-		dierr(err)
+		return nil, err
 	}
 	defer closeFile(dir)
 
 	files, err := dir.Readdir(-1)
 	if err != nil {
-		dierr(err)
+		return nil, err
 	}
 	var javaPaths []JavaExecutable
 	for _, file := range files {
 		if !file.Mode().IsRegular() {
 			path := filepath.Join(directory, file.Name(), "bin", "java")
-			javaPaths = append(javaPaths, findJavaExecutables(path)...)
+			javaExecutables, err := findJavaExecutables(path)
+			if err != nil {
+				return nil, err
+			}
+			javaPaths = append(javaPaths, javaExecutables...)
 		}
 	}
-	return javaPaths
+	return javaPaths, nil
 }
