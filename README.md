@@ -89,3 +89,23 @@ JAVA="$(jvm-finder --min-java-version=11)"
 ### JVM Discovery (files, directories, environment variables)
 
 ### JVM filtering
+
+### Building the application
+
+To build the application, the following dependencies are required:
+
+* Go (>= 1.20): to build the application. The go version might be relaxed in the future
+* A JDK (>= 9): to build the JVM metadata extraction
+* `make`
+
+The application can then be built with:
+
+```shell
+make
+```
+
+Once built, you can run it with
+
+```shell
+./build/go/jvm-finder
+```
