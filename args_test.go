@@ -11,56 +11,70 @@ func TestParseArgs(t *testing.T) {
 		expected Args
 		err      error
 	}
+	defaults := Args{
+		logLevel: "error",
+		programs: []string{"java"},
+	}
 	data := []TestData{{
-		args: []string{},
-		expected: Args{
-			logLevel: "error",
-		},
+		args:     []string{},
+		expected: defaults,
 	}, {
 		args: []string{"--log-level=debug"},
-		expected: Args{
-			logLevel: "debug",
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "debug"
+		}),
 	}, {
 		args: []string{"--log-level=info"},
-		expected: Args{
-			logLevel: "info",
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "info"
+		}),
 	}, {
 		args: []string{"--log-level=error"},
-		expected: Args{
-			logLevel: "error",
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+		}),
 	}, {
 		args: []string{"--config-key", "xyz"},
-		expected: Args{
-			logLevel:  "error",
-			configKey: "xyz",
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.configKey = "xyz"
+		}),
 	}, {
 		args: []string{"--min-java-version", "11"},
-		expected: Args{
-			logLevel:       "error",
-			minJavaVersion: 11,
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.minJavaVersion = 11
+		}),
 	}, {
 		args: []string{"--max-java-version", "17"},
-		expected: Args{
-			logLevel:       "error",
-			maxJavaVersion: 17,
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.maxJavaVersion = 17
+		}),
 	}, {
 		args: []string{"--vendors", "Eclipse Adoptium"},
-		expected: Args{
-			logLevel: "error",
-			vendors:  []string{"Eclipse Adoptium"},
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.vendors = []string{"Eclipse Adoptium"}
+		}),
 	}, {
 		args: []string{"--vendors", "Eclipse Adoptium", "--vendors", "GraalVM Community"},
-		expected: Args{
-			logLevel: "error",
-			vendors:  []string{"Eclipse Adoptium", "GraalVM Community"},
-		},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.vendors = []string{"Eclipse Adoptium", "GraalVM Community"}
+		}),
+	}, {
+		args: []string{"--programs", "javac"},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.programs = []string{"javac"}
+		}),
+	}, {
+		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image"},
+		expected: patch(defaults, func(args *Args) {
+			args.logLevel = "error"
+			args.programs = []string{"java", "javac", "native-image"}
+		}),
 	}}
 	for _, data := range data {
 		actual, err := ParseArgs(data.args)
@@ -92,4 +106,9 @@ func TestParseArgsErrors(t *testing.T) {
 		assertEquals(t, description, nothing, actual)
 		assertErrorContains(t, description, data.err, err)
 	}
+}
+
+func patch(args Args, patchFunc func(args *Args)) Args {
+	patchFunc(&args)
+	return args
 }

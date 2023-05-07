@@ -14,6 +14,7 @@ type Args struct {
 	minJavaVersion uint
 	maxJavaVersion uint
 	vendors        list
+	programs       list
 }
 
 type list []string
@@ -42,6 +43,8 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 		"The maximum (inclusive) Java Language Specification version the found JVMs should provide")
 	cmd.Var(&args.vendors, "vendors",
 		"The vendors to filter on. If empty, no vendor filtering will be done")
+	cmd.Var(&args.programs, "programs",
+		"The programs the JVM should provide in its \"${java.home}/bin\" directory. If empty, defaults to java")
 	if err := cmd.Parse(commandArgs); err != nil {
 		return nil, fmt.Errorf("%s\n%s", err, output)
 	}
@@ -51,6 +54,9 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 	}
 	if err := setLogLevel(args.logLevel); err != nil {
 		return nil, err
+	}
+	if len(args.programs) == 0 {
+		args.programs = append(args.programs, "java")
 	}
 	return &args, nil
 }
