@@ -72,10 +72,10 @@ JAVA="$(jvm-finder --min-java-version=11)"
   both `--min-java-version` and `--max-java-version` are not specified, falls back on the configuration.
 - `--vendors <vendor>`: (repeatable) a list of JVM vendors to choose from. If specified, jvm-finder will only consider
   JVMs from this vendor. If not specified, not vendor filtering will happen
-- **[TO BE IMPLEMENTED]** `--program <program>`: (repeatable) a list of programs the JVM must provide in their `$JAVA_HOME/bin` directory. If
+- `--programs <program>`: (repeatable) a list of programs the JVM must provide in their `$JAVA_HOME/bin` directory. If
   more than one program is provided, the output will automatically be in `java.home` mode. If not specified, defaults
   to `java`.
-- **[TO BE IMPLEMENTED]** `--output <output-mode>`: the output mode of jvm-finder. Possible values are `java.home` (the `java.home` directory of
+- `--output-mode <output-mode>`: the output mode of jvm-finder. Possible values are `java.home` (the `java.home` directory of
   the selected JVM) and `binary` (the path to the desired binary of the selected JVM). If not specified, defaults
   to `binary`.
 

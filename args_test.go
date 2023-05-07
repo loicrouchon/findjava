@@ -12,8 +12,9 @@ func TestParseArgs(t *testing.T) {
 		err      error
 	}
 	defaults := Args{
-		logLevel: "error",
-		programs: []string{"java"},
+		logLevel:   "error",
+		programs:   []string{"java"},
+		outputMode: "binary",
 	}
 	data := []TestData{{
 		args:     []string{},
@@ -70,10 +71,19 @@ func TestParseArgs(t *testing.T) {
 			args.programs = []string{"javac"}
 		}),
 	}, {
-		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image"},
+		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image", "--output-mode", "java.home"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
 			args.programs = []string{"java", "javac", "native-image"}
+			args.outputMode = "java.home"
+		}),
+	}, {
+		args:     []string{"--output-mode", "binary"},
+		expected: defaults,
+	}, {
+		args: []string{"--output-mode", "java.home"},
+		expected: patch(defaults, func(args *Args) {
+			args.outputMode = "java.home"
 		}),
 	}}
 	for _, data := range data {
@@ -97,7 +107,14 @@ func TestParseArgsErrors(t *testing.T) {
 		err:  "unresolved arguments: [unresolved argument]",
 	}, {
 		args: []string{"--log-level=xoxo"},
-		err:  "invalid log level: 'xoxo'. Available levels are: debug, info, warn, error",
+		err:  "invalid log level: \"xoxo\". Available levels are: debug, info, warn, error",
+	}, {
+		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image"},
+		err: "output mode \"binary\" cannot be used when multiple programs are requested. " +
+			"Use \"java.home\" instead",
+	}, {
+		args: []string{"--output-mode=xoxo"},
+		err:  "invalid output mode: \"xoxo\". Available values are: java.home, binary",
 	}}
 	for _, data := range data {
 		actual, err := ParseArgs(data.args)

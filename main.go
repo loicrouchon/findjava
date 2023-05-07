@@ -27,8 +27,24 @@ func main() {
 	if jvms := jvmInfos.Select(rules); len(jvms) > 0 {
 		jvm := jvms[0]
 		logJvmList("[SELECTED]", jvms[0:1])
-		console.printf("%s\n", filepath.Join(jvm.javaHome, "bin", "java"))
+		if err := processOutput(args, jvm); err != nil {
+			die(err)
+		}
 	} else {
 		die(fmt.Errorf("unable to find a JVM matching requirements %s", rules))
 	}
+}
+
+func processOutput(args *Args, jvm Jvm) error {
+	if args.outputMode == outputModeJavaHome {
+		console.printf("%s\n", jvm.javaHome)
+		return nil
+	}
+	if args.outputMode == outputModeBinary {
+		for _, program := range args.programs {
+			console.printf("%s\n", filepath.Join(jvm.javaHome, "bin", program))
+		}
+		return nil
+	}
+	return fmt.Errorf("unsupported output-mode \"%s\"", args.outputMode)
 }
