@@ -20,7 +20,7 @@ func TestJvmSelectionRules(t *testing.T) {
 		{minJavaVersion: allVersions, maxJavaVersion: allVersions}: {versionRange: &VersionRange{Min: 11, Max: allVersions}},
 	}
 	for versionRange, expectedRules := range versionRangesToSelectionRules {
-		rules := jvmSelectionRules(&config, versionRange.minJavaVersion, versionRange.maxJavaVersion, nil)
+		rules := jvmSelectionRules(&config, versionRange.minJavaVersion, versionRange.maxJavaVersion, nil, nil)
 		if !reflect.DeepEqual(rules, &expectedRules) {
 			t.Fatalf(`Expecting jvmSelectionRules("%v") == %v but was %v`,
 				versionRange, expectedRules, rules)

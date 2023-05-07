@@ -23,7 +23,7 @@ func main() {
 	if err != nil {
 		die(err)
 	}
-	rules := jvmSelectionRules(config, args.minJavaVersion, args.maxJavaVersion, args.vendors)
+	rules := jvmSelectionRules(config, args.minJavaVersion, args.maxJavaVersion, args.vendors, args.programs)
 	if jvms := jvmInfos.Select(rules); len(jvms) > 0 {
 		jvm := jvms[0]
 		logJvmList("[SELECTED]", jvms[0:1])
