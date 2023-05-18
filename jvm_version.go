@@ -23,7 +23,11 @@ func (versionRange *VersionRange) Matches(version uint) bool {
 }
 
 func (versionRange *VersionRange) String() string {
-	return fmt.Sprintf("[%s..%s]}", str(versionRange.Min), str(versionRange.Max))
+	return fmt.Sprintf("[%s..%s]", str(versionRange.Min), str(versionRange.Max))
+}
+
+func (versionRange *VersionRange) isBounded() bool {
+	return versionRange.Min != allVersions || versionRange.Max != allVersions
 }
 
 func str(version uint) string {

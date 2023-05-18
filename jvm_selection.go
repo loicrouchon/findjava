@@ -14,13 +14,31 @@ func (jvms *JvmsInfos) Select(rules *JvmSelectionRules) []Jvm {
 }
 
 func filter(rules *JvmSelectionRules, jvms *JvmsInfos) ([]Jvm, []Jvm) {
+	var allJvms []Jvm
+	for _, jvm := range jvms.Jvms {
+		allJvms = append(allJvms, *jvm)
+	}
+	return filterJvmList(rules, allJvms)
+}
+
+func filterJvmList(rules *JvmSelectionRules, allJvms []Jvm) ([]Jvm, []Jvm) {
 	var candidates []Jvm
 	var ignored []Jvm
-	for _, jvm := range jvms.Jvms {
-		if rules.Matches(jvm) {
-			candidates = append(candidates, *jvm)
+	for _, jvm := range allJvms {
+		if rules.Matches(&jvm) {
+			candidates = append(candidates, jvm)
 		} else {
-			ignored = append(ignored, *jvm)
+			ignored = append(ignored, jvm)
+		}
+	}
+	if len(candidates) > 0 && rules.preferredRules != nil {
+		preferredCandidates, preferredIgnored := filterJvmList(rules.preferredRules, candidates)
+		if len(preferredCandidates) > 0 {
+			return preferredCandidates, preferredIgnored
+		} else if !rules.versionRange.isBounded() {
+			return nil, preferredIgnored
+		} else {
+			logInfo("Unable to satisfy preferred selection rules %v, ignoring them", rules.preferredRules)
 		}
 	}
 	return candidates, ignored
