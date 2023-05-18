@@ -75,7 +75,8 @@ JAVA="$(jvm-finder --min-java-version=11)"
 - `--programs <program>`: (repeatable) a list of programs the JVM must provide in their `$JAVA_HOME/bin` directory. If
   more than one program is provided, the output will automatically be in `java.home` mode. If not specified, defaults
   to `java`.
-- `--output-mode <output-mode>`: the output mode of jvm-finder. Possible values are `java.home` (the `java.home` directory of
+- `--output-mode <output-mode>`: the output mode of jvm-finder. Possible values are `java.home` (the `java.home`
+  directory of
   the selected JVM) and `binary` (the path to the desired binary of the selected JVM). If not specified, defaults
   to `binary`.
 
@@ -85,16 +86,79 @@ JAVA="$(jvm-finder --min-java-version=11)"
 ## Configuration
 
 > _**WORK IN PROGRESS**_
- 
+
 ### JVM Discovery (files, directories, environment variables)
+
+The JVM discovery is driven by the `jvmLookupPaths` configuration property.
+It will scan the content each path in this property to discover JVMs.
+
+Each of those path must be either absolute, relative to the user home (`~`).
+Path processing will be performed as follows:
+
+1. Resolve environment variables (`$JAVA_HOME`, `$JAVA_HOME/bin/java`)
+2. Resolve user's home directory `~`: `~/.sdkman/candidates/java`
+
+JVMs will be discovered for a given path in the following use cases:
+
+* The path is pointing to a file (after symbolic links resolution) which is executable
+    * Examples:
+        * `/usr/bin/java`
+        * `$JAVA_HOME/bin/java`
+* The path is pointing to a directory which contains (after symbolic links resolution) a `bin/java` executable
+    * Examples:
+        * `$JAVA_HOME`
+        * `$GRAALVM_HOME`
+    * If no `bin/java` executable is found, all direct subdirectories will be checked for `<subdirectory>/bin/java`
+      executables
+        * Examples:
+            * `/usr/lib/jvm`
+            * `~/.sdkman/candidates/java`
+            * `/System/Volumes/Data/Library/Java/JavaVirtualMachines`
+        * This will not recurse to subdirectories' subdirectories
+
+If no configuration for `jvmLookupPaths` is defined, sensible defaults depending on the operating system will be used
+for the lookup. The defaults are specified below:
+
+* > _**WORK IN PROGRESS**_
 
 ### JVM filtering
 
-### Building the application
+The filtering is split in two steps:
+
+1. Applying the strong filtering constraints (i.e. specified on the command line)
+2. Applying the weak filtering constraints (i.e. coming from the configuration)
+
+The reasoning is the following: The startup script calling jvm-finder is the most knowledgeable about the requirements
+of the program it will need to run. Therefore, constraints expressed as arguments when calling `jvm-finder` are
+considered strong.
+
+On the other side, system configuration will be considered as recommendations and `jvm-finder` will try to fulfill those
+as much as possible.
+
+If strong constraints can be satisfied but not the recommendations from the system configuration, `jvm-finder` will
+ignore the recommendations and select a JVM only based on the strong constraints.
+
+> **Note**: If no `--min-java-version`/`--max-java-version` is specified on the command line, `jvm-finder` will not consider
+> to have strong recommendations. In this case, if system recommendations cannot be fulfilled, it will fail.
+> _This behavior might be revisited in the near future_.
+>
+> **Recommendation**: It is recommended to always specify the `--min-java-version`
+
+### Multiple candidate JVMs found
+
+In case multiple JVMs are found to be matching the filtering criteria, an election process will be started to select
+which one of those shall be used.
+
+This process will return the JVM implementing the highest `java.specification.version`.
+If multiple JVMs implement the same `java.specification.version` one will be selected. This selection process is not
+specified at the moment nor deterministic. Future versions of `jvm-finder` might provide rules for preferred JVM
+selection in such a case.
+
+## Building the application
 
 To build the application, the following dependencies are required:
 
-* Go (>= 1.20): to build the application. The go version might be relaxed in the future
+* Go (>= 1.15): to build the application. The go version might be relaxed in the future
 * A JDK (>= 9): to build the JVM metadata extraction
 * `make`
 
