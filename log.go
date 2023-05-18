@@ -16,11 +16,11 @@ var console = Console{
 	stderr: os.Stderr,
 }
 
-func (console *Console) printf(message string, v ...any) {
+func (console *Console) printf(message string, v ...interface{}) {
 	_, _ = fmt.Fprintf(console.stdout, message, v...)
 }
 
-func (console *Console) eprintf(message string, v ...any) {
+func (console *Console) eprintf(message string, v ...interface{}) {
 	_, _ = fmt.Fprintf(console.stderr, message, v...)
 }
 
@@ -48,12 +48,12 @@ func setLogLevel(level string) error {
 	return nil
 }
 
-func logDebug(message string, v ...any) {
+func logDebug(message string, v ...interface{}) {
 	if currentLogLevel >= logLevelDebug {
 		console.printf("[DEBUG] %s\n", fmt.Sprintf(message, v...))
 	}
 }
-func logInfo(message string, v ...any) {
+func logInfo(message string, v ...interface{}) {
 	if currentLogLevel >= logLevelInfo {
 		console.printf("[INFO] %s\n", fmt.Sprintf(message, v...))
 	}
@@ -76,6 +76,6 @@ func die(err error) {
 	os.Exit(1)
 }
 
-func wrapErr(err error, message string, v ...any) error {
+func wrapErr(err error, message string, v ...interface{}) error {
 	return fmt.Errorf("%s\n\t%s", fmt.Sprintf(message, v...), err)
 }

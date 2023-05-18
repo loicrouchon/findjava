@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func assertEquals(t *testing.T, description string, expected any, actual any) {
+func assertEquals(t *testing.T, description string, expected interface{}, actual interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf(`Expecting
     %s
