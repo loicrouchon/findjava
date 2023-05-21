@@ -1,7 +1,8 @@
-package main
+package jvm
 
 import (
 	"fmt"
+	"jvm-finder/test"
 	"strconv"
 	"testing"
 )
@@ -24,8 +25,8 @@ func TestParseVersion(t *testing.T) {
 	for versionToParse, expected := range versions {
 		actual, err := parseJavaSpecificationVersion(versionToParse)
 		description := fmt.Sprintf("parseJavaSpecificationVersion(%s)", versionToParse)
-		assertNoError(t, description, err)
-		assertEquals(t, description, expected, actual)
+		test.AssertNoError(t, description, err)
+		test.AssertEquals(t, description, expected, actual)
 	}
 }
 
@@ -38,6 +39,6 @@ func TestParseVersionError(t *testing.T) {
 	for versionToParse, expected := range versions {
 		_, err := parseJavaSpecificationVersion(versionToParse)
 		description := fmt.Sprintf("parseJavaSpecificationVersion(%s)", versionToParse)
-		assertErrorContains(t, description, expected, err)
+		test.AssertErrorContains(t, description, expected, err)
 	}
 }

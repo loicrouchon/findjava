@@ -1,12 +1,15 @@
-package main
+package config
 
 import (
 	"fmt"
+	. "jvm-finder/internal/jvm"
+	"jvm-finder/internal/utils"
+	"jvm-finder/test"
 	"testing"
 )
 
 func TestLoadConfig(t *testing.T) {
-	defaultJvmLookupPath := resolvePaths([]string{
+	defaultJvmLookupPath := utils.ResolvePaths([]string{
 		"$JAVA_HOME/bin/java",
 		"$GRAALVM_HOME/bin/java",
 		"/bin/java",
@@ -30,7 +33,7 @@ func TestLoadConfig(t *testing.T) {
 			JvmVersionRange: defaultJvmVersionRange,
 		},
 		"test-resources/path-lookup-config.json": {
-			JvmLookupPaths: resolvePaths([]string{
+			JvmLookupPaths: utils.ResolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
 				"~/.sdkman/candidates/java",
@@ -44,7 +47,7 @@ func TestLoadConfig(t *testing.T) {
 			},
 		},
 		"test-resources/full-config.json": {
-			JvmLookupPaths: resolvePaths([]string{
+			JvmLookupPaths: utils.ResolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
 				"~/.sdkman/candidates/java",
@@ -60,18 +63,18 @@ func TestLoadConfig(t *testing.T) {
 		},
 	}
 	for path, expected := range data {
-		actual, err := loadConfig(path, defaultKey)
-		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, defaultKey)
-		assertNoError(t, description, err)
-		assertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.jvmsLookupPaths)
-		assertEquals(t, description+".jvmVersionRange()", *expected.JvmVersionRange, actual.jvmVersionRange)
+		actual, err := LoadConfig(path, defaultKey)
+		description := fmt.Sprintf("LoadConfig(\"%s\", \"%s\")", path, defaultKey)
+		test.AssertNoError(t, description, err)
+		test.AssertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.JvmsLookupPaths)
+		test.AssertEquals(t, description+".JvmVersionRange()", *expected.JvmVersionRange, actual.JvmVersionRange)
 	}
 }
 
 func TestLoadConfigWithOverrides(t *testing.T) {
 	data := map[string]ConfigEntry{
 		"abc": {
-			JvmLookupPaths: resolvePaths([]string{
+			JvmLookupPaths: utils.ResolvePaths([]string{
 				"~/.sdkman/candidates/java",
 			}),
 			JvmVersionRange: &VersionRange{
@@ -80,7 +83,7 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 			},
 		},
 		"xyz": {
-			JvmLookupPaths: resolvePaths([]string{
+			JvmLookupPaths: utils.ResolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
 				"~/.sdkman/candidates/java",
@@ -92,10 +95,10 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 	}
 	for key, expected := range data {
 		path := "test-resources/full-config.json"
-		actual, err := loadConfig(path, key)
-		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, key)
-		assertNoError(t, description, err)
-		assertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.jvmsLookupPaths)
-		assertEquals(t, description+".jvmVersionRange()", *expected.JvmVersionRange, actual.jvmVersionRange)
+		actual, err := LoadConfig(path, key)
+		description := fmt.Sprintf("LoadConfig(\"%s\", \"%s\")", path, key)
+		test.AssertNoError(t, description, err)
+		test.AssertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.JvmsLookupPaths)
+		test.AssertEquals(t, description+".JvmVersionRange()", *expected.JvmVersionRange, actual.JvmVersionRange)
 	}
 }

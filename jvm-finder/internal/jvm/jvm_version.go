@@ -1,11 +1,11 @@
-package main
+package jvm
 
 import (
 	"fmt"
 	"strconv"
 )
 
-const allVersions = 0
+const AllVersions = 0
 
 type VersionRange struct {
 	Min uint
@@ -13,10 +13,10 @@ type VersionRange struct {
 }
 
 func (versionRange *VersionRange) Matches(version uint) bool {
-	if versionRange.Min != allVersions && versionRange.Min > version {
+	if versionRange.Min != AllVersions && versionRange.Min > version {
 		return false
 	}
-	if versionRange.Max != allVersions && versionRange.Max < version {
+	if versionRange.Max != AllVersions && versionRange.Max < version {
 		return false
 	}
 	return true
@@ -26,12 +26,12 @@ func (versionRange *VersionRange) String() string {
 	return fmt.Sprintf("[%s..%s]", str(versionRange.Min), str(versionRange.Max))
 }
 
-func (versionRange *VersionRange) isBounded() bool {
-	return versionRange.Min != allVersions || versionRange.Max != allVersions
+func (versionRange *VersionRange) IsBounded() bool {
+	return versionRange.Min != AllVersions || versionRange.Max != AllVersions
 }
 
 func str(version uint) string {
-	if version == allVersions {
+	if version == AllVersions {
 		return ""
 	} else {
 		return strconv.Itoa(int(version))

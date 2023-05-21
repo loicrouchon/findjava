@@ -1,4 +1,5 @@
-public class JvmInfo {
+
+public class JvmMetadataExtractor {
 
     public static void main(String[] args) {
         System
@@ -9,7 +10,7 @@ public class JvmInfo {
             .map(String.class::cast)
             .filter(key -> key.startsWith("java."))
             .sorted()
-            .forEach(JvmInfo::printProperty);
+            .forEach(JvmMetadataExtractor::printProperty);
     }
 
     private static void printProperty(String property) {

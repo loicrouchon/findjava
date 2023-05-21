@@ -1,7 +1,8 @@
-package main
+package jvm
 
 import (
 	"fmt"
+	"jvm-finder/internal/log"
 	"os/exec"
 	"strings"
 	"time"
@@ -9,20 +10,20 @@ import (
 
 type Jvm struct {
 	javaPath                 string
-	javaHome                 string
-	javaSpecificationVersion uint
-	javaVendor               string
+	JavaHome                 string
+	JavaSpecificationVersion uint
+	JavaVendor               string
 	FetchedAt                time.Time
 	SystemProperties         map[string]string
 }
 
 func (jvm *Jvm) rebuild() error {
-	jvm.javaHome = jvm.SystemProperties["java.home"]
-	jvm.javaVendor = jvm.SystemProperties["java.vendor"]
+	jvm.JavaHome = jvm.SystemProperties["java.home"]
+	jvm.JavaVendor = jvm.SystemProperties["java.vendor"]
 	if specVersion, err := parseJavaSpecificationVersion(jvm.SystemProperties["java.specification.version"]); err != nil {
 		return err
 	} else {
-		jvm.javaSpecificationVersion = specVersion
+		jvm.JavaSpecificationVersion = specVersion
 	}
 	return nil
 }
@@ -36,15 +37,15 @@ java.specification.version: %d
 `,
 		jvm.javaPath,
 		jvm.FetchedAt,
-		jvm.javaHome,
-		jvm.javaSpecificationVersion)
+		jvm.JavaHome,
+		jvm.JavaSpecificationVersion)
 }
 
 func fetchJvmInfo(javaPath string) (*Jvm, error) {
-	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmInfo")
+	cmd := exec.Command(javaPath, "-cp", "build/classes", "JvmMetadataExtractor")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, wrapErr(err, "fail to call %s ", javaPath)
+		return nil, log.WrapErr(err, "fail to call %s ", javaPath)
 	}
 	lines := strings.Split(string(output), "\n")
 	systemProperties := make(map[string]string)

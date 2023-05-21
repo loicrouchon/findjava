@@ -1,15 +1,17 @@
-package main
+package discovery
 
 import (
 	"fmt"
 	"io/fs"
+	"jvm-finder/internal/log"
+	"jvm-finder/internal/utils"
 	"os"
 	"path/filepath"
 	"time"
 )
 
 type JavaExecutables struct {
-	javaPaths map[string]time.Time
+	JavaPaths map[string]time.Time
 }
 
 type JavaExecutable struct {
@@ -21,20 +23,20 @@ func (javaExecutable *JavaExecutable) String() string {
 	return fmt.Sprintf(`{timestamp: %-30s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
 }
 
-func findAllJavaExecutables(javaLookUpPaths *[]string) (JavaExecutables, error) {
+func FindAllJavaExecutables(javaLookUpPaths *[]string) (JavaExecutables, error) {
 	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range *javaLookUpPaths {
-		logDebug("Checking %s", javaLookUpPath)
+		log.Debug("Checking %s", javaLookUpPath)
 		javaExecutables, err := findJavaExecutables(javaLookUpPath)
 		if err != nil {
 			return JavaExecutables{}, err
 		}
 		for _, java := range javaExecutables {
-			logDebug("  - Found %v", &java)
+			log.Debug("  - Found %v", &java)
 			javaPaths[java.path] = java.timestamp
 		}
 	}
-	return JavaExecutables{javaPaths: javaPaths}, nil
+	return JavaExecutables{JavaPaths: javaPaths}, nil
 }
 
 func findJavaExecutables(lookUpPath string) ([]JavaExecutable, error) {
@@ -60,7 +62,7 @@ func javaExecutable(path string, fileInfo fs.FileInfo) []JavaExecutable {
 			timestamp: fileInfo.ModTime(),
 		}}
 	} else {
-		logDebug("  File %s is not executable", path)
+		log.Debug("  File %s is not executable", path)
 		return []JavaExecutable{}
 	}
 }
@@ -73,7 +75,7 @@ func javaExecutablesForEachJvmDirectory(directory string) ([]JavaExecutable, err
 	if err != nil {
 		return nil, err
 	}
-	defer closeFile(dir)
+	defer utils.CloseFile(dir)
 
 	files, err := dir.Readdir(-1)
 	if err != nil {

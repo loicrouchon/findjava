@@ -1,18 +1,19 @@
-package main
+package log
 
 import (
+	"jvm-finder/internal/console"
 	"reflect"
 	"testing"
 )
 
 func setTestConsole() *TestConsole {
-	_ = setLogLevel("error")
+	_ = SetLogLevel("error")
 	testConsole := TestConsole{
 		stdout: MessagesHolder{messages: make([]string, 0)},
 		stderr: MessagesHolder{messages: make([]string, 0)},
 	}
-	console.stdout = InMemoryWriter{content: &testConsole.stdout}
-	console.stderr = InMemoryWriter{content: &testConsole.stderr}
+	console.Writer.Stdout = InMemoryWriter{content: &testConsole.stdout}
+	console.Writer.Stderr = InMemoryWriter{content: &testConsole.stderr}
 	return &testConsole
 }
 

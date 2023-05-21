@@ -1,31 +1,34 @@
-.PHONY: clean all format test build run
-
-BUILD_DIR=build
+BUILD_DIR=$(shell PWD)/build
+JAVA_INFO_SRC=$(shell PWD)/metadata-extractor/JvmMetadataExtractor.java
 JAVA_BUILD_DIR=$(BUILD_DIR)/classes
-JAVA_INFO=$(JAVA_BUILD_DIR)/JvmInfo.class
+JAVA_INFO_CLASS=$(JAVA_BUILD_DIR)/JvmMetadataExtractor.class
+JVM_FINDER_SOURCES=$(shell PWD)/jvm-finder
 GO_BUILD_DIR=$(BUILD_DIR)/go
 MAIN_PROGRAM=$(GO_BUILD_DIR)/jvm-finder
+SOURCES := $(shell find $(JVM_FINDER_SOURCES) -name '*.go')
 
+.PHONY: all
 all: format test build
 
-build: $(JAVA_INFO) $(MAIN_PROGRAM)
-
-test: $(JAVA_INFO)
-	@go test
-
-$(JAVA_INFO): JvmInfo.java
-	@mkdir -p "$(JAVA_BUILD_DIR)"
-	@javac --release 8 -d "$(JAVA_BUILD_DIR)" JvmInfo.java
-
-$(MAIN_PROGRAM): *.go
-	@mkdir -p "$(GO_BUILD_DIR)"
-	@go build -ldflags "-s -w" -o "$(MAIN_PROGRAM)" jvm-finder
-
-format:
-	@go fmt
-
+.PHONY: clean
 clean:
-	@rm  -rf "$(BUILD_DIR)"
+	rm  -rf "$(BUILD_DIR)"
 
-run: $(JAVA_INFO)
-	@go run jvm-finder
+.PHONY: build
+build: $(JAVA_INFO_CLASS) $(MAIN_PROGRAM)
+
+$(JAVA_INFO_CLASS): $(JAVA_INFO_SRC)
+	@mkdir -p "$(JAVA_BUILD_DIR)"
+	javac --release 8 -d "$(JAVA_BUILD_DIR)" $(JAVA_INFO_SRC)
+
+$(MAIN_PROGRAM): $(SOURCES)
+	@mkdir -p "$(GO_BUILD_DIR)"
+	cd $(JVM_FINDER_SOURCES) && go build -ldflags "-s -w" -o "$(GO_BUILD_DIR)" ./...
+
+.PHONY: format
+format: $(SOURCES)
+	cd $(JVM_FINDER_SOURCES) && go fmt ./...
+
+.PHONY: test
+test: $(JAVA_INFO_CLASS) $(SOURCES)
+	cd $(JVM_FINDER_SOURCES) && go test ./...

@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"reflect"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func assertEquals(t *testing.T, description string, expected interface{}, actual interface{}) {
+func AssertEquals(t *testing.T, description string, expected interface{}, actual interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf(`Expecting
     %s
@@ -18,7 +18,7 @@ but got:
 	}
 }
 
-func assertErrorEquals(t *testing.T, description string, expected error, actual error) {
+func AssertErrorEquals(t *testing.T, description string, expected error, actual error) {
 	if actual != expected {
 		t.Fatalf(`Expecting
     %s
@@ -30,7 +30,7 @@ but got:
 	}
 }
 
-func assertErrorContains(t *testing.T, description string, expected string, actual error) {
+func AssertErrorContains(t *testing.T, description string, expected string, actual error) {
 	if expected == "" && actual == nil {
 		return
 	}
@@ -45,7 +45,7 @@ but got:
 	}
 }
 
-func assertNoError(t *testing.T, description string, actual error) {
+func AssertNoError(t *testing.T, description string, actual error) {
 	if actual != nil {
 		t.Fatalf(`Expecting
     %s

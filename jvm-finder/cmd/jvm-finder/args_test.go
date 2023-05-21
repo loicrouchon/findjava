@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"jvm-finder/test"
 	"testing"
 )
 
@@ -13,8 +14,8 @@ func TestParseArgs(t *testing.T) {
 	}
 	defaults := Args{
 		logLevel:   "error",
-		programs:   []string{"java"},
-		outputMode: "binary",
+		Programs:   []string{"java"},
+		OutputMode: "binary",
 	}
 	data := []TestData{{
 		args:     []string{},
@@ -38,44 +39,44 @@ func TestParseArgs(t *testing.T) {
 		args: []string{"--config-key", "xyz"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.configKey = "xyz"
+			args.ConfigKey = "xyz"
 		}),
 	}, {
 		args: []string{"--min-java-version", "11"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.minJavaVersion = 11
+			args.MinJavaVersion = 11
 		}),
 	}, {
 		args: []string{"--max-java-version", "17"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.maxJavaVersion = 17
+			args.MaxJavaVersion = 17
 		}),
 	}, {
-		args: []string{"--vendors", "Eclipse Adoptium"},
+		args: []string{"--Vendors", "Eclipse Adoptium"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.vendors = []string{"Eclipse Adoptium"}
+			args.Vendors = []string{"Eclipse Adoptium"}
 		}),
 	}, {
-		args: []string{"--vendors", "Eclipse Adoptium", "--vendors", "GraalVM Community"},
+		args: []string{"--Vendors", "Eclipse Adoptium", "--Vendors", "GraalVM Community"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.vendors = []string{"Eclipse Adoptium", "GraalVM Community"}
+			args.Vendors = []string{"Eclipse Adoptium", "GraalVM Community"}
 		}),
 	}, {
-		args: []string{"--programs", "javac"},
+		args: []string{"--Programs", "javac"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.programs = []string{"javac"}
+			args.Programs = []string{"javac"}
 		}),
 	}, {
-		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image", "--output-mode", "java.home"},
+		args: []string{"--Programs", "java", "--Programs", "javac", "--Programs", "native-image", "--output-mode", "java.home"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
-			args.programs = []string{"java", "javac", "native-image"}
-			args.outputMode = "java.home"
+			args.Programs = []string{"java", "javac", "native-image"}
+			args.OutputMode = "java.home"
 		}),
 	}, {
 		args:     []string{"--output-mode", "binary"},
@@ -83,14 +84,14 @@ func TestParseArgs(t *testing.T) {
 	}, {
 		args: []string{"--output-mode", "java.home"},
 		expected: patch(defaults, func(args *Args) {
-			args.outputMode = "java.home"
+			args.OutputMode = "java.home"
 		}),
 	}}
 	for _, data := range data {
 		actual, err := ParseArgs(data.args)
 		description := fmt.Sprintf("ParseArgs(%#v)", data.args)
-		assertErrorEquals(t, description, data.err, err)
-		assertEquals(t, description, &data.expected, actual)
+		test.AssertErrorEquals(t, description, data.err, err)
+		test.AssertEquals(t, description, &data.expected, actual)
 	}
 }
 
@@ -109,8 +110,8 @@ func TestParseArgsErrors(t *testing.T) {
 		args: []string{"--log-level=xoxo"},
 		err:  "invalid log level: \"xoxo\". Available levels are: debug, info, warn, error",
 	}, {
-		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image"},
-		err: "output mode \"binary\" cannot be used when multiple programs are requested. " +
+		args: []string{"--Programs", "java", "--Programs", "javac", "--Programs", "native-image"},
+		err: "output mode \"binary\" cannot be used when multiple Programs are requested. " +
 			"Use \"java.home\" instead",
 	}, {
 		args: []string{"--output-mode=xoxo"},
@@ -120,8 +121,8 @@ func TestParseArgsErrors(t *testing.T) {
 		actual, err := ParseArgs(data.args)
 		description := fmt.Sprintf("ParseArgs(%#v)", data.args)
 		var nothing *Args
-		assertEquals(t, description, nothing, actual)
-		assertErrorContains(t, description, data.err, err)
+		test.AssertEquals(t, description, nothing, actual)
+		test.AssertErrorContains(t, description, data.err, err)
 	}
 }
 

@@ -1,7 +1,8 @@
-package main
+package utils
 
 import (
 	"fmt"
+	"jvm-finder/internal/log"
 	"os"
 	"os/user"
 	"regexp"
@@ -10,11 +11,11 @@ import (
 
 var envVarsRegexp, _ = regexp.Compile(`\$([a-zA-Z0-9_]+)`)
 
-func resolvePaths(paths []string) []string {
+func ResolvePaths(paths []string) []string {
 	var resolvedPaths []string
 	for _, path := range paths {
-		if resolvedPath, err := resolvePath(path); err != nil {
-			logInfo(err.Error())
+		if resolvedPath, err := ResolvePath(path); err != nil {
+			log.Info(err.Error())
 		} else {
 			resolvedPaths = append(resolvedPaths, resolvedPath)
 		}
@@ -22,7 +23,7 @@ func resolvePaths(paths []string) []string {
 	return resolvedPaths
 }
 
-func resolvePath(path string) (string, error) {
+func ResolvePath(path string) (string, error) {
 	if strings.Contains(path, "$") {
 		var err error
 		path = string(envVarsRegexp.ReplaceAllFunc([]byte(path),

@@ -1,7 +1,9 @@
-package main
+package utils
 
 import (
 	"fmt"
+	"jvm-finder/internal/log"
+	"jvm-finder/test"
 	"os"
 	"os/user"
 	"testing"
@@ -13,7 +15,7 @@ func TestResolvePath(t *testing.T) {
 	}
 	var userHome string
 	if u, err := user.Current(); err != nil {
-		die(err)
+		log.Die(err)
 	} else {
 		userHome = u.HomeDir
 	}
@@ -27,9 +29,9 @@ func TestResolvePath(t *testing.T) {
 		{path: "~/jdks/bin/java", expectedPath: userHome + "/jdks/bin/java"},
 	}
 	for _, data := range testData {
-		actualPath, err := resolvePath(data.path)
-		description := fmt.Sprintf("resolvePath(\"%s\")", data.path)
-		assertEquals(t, description, data.expectedPath, actualPath)
-		assertErrorContains(t, description, data.err, err)
+		actualPath, err := ResolvePath(data.path)
+		description := fmt.Sprintf("ResolvePath(\"%s\")", data.path)
+		test.AssertEquals(t, description, data.expectedPath, actualPath)
+		test.AssertErrorContains(t, description, data.err, err)
 	}
 }

@@ -1,8 +1,11 @@
-package main
+package config
 
 import (
 	"encoding/json"
 	"fmt"
+	. "jvm-finder/internal/jvm"
+	"jvm-finder/internal/log"
+	"jvm-finder/internal/utils"
 	"os"
 	"strings"
 )
@@ -29,9 +32,9 @@ var defaultConfigEntry = ConfigEntry{
 }
 
 type Config struct {
-	jvmsMetadataCachePath string
-	jvmsLookupPaths       []string
-	jvmVersionRange       VersionRange
+	JvmsMetadataCachePath string
+	JvmsLookupPaths       []string
+	JvmVersionRange       VersionRange
 }
 
 func (cfg *Config) String() string {
@@ -39,7 +42,7 @@ func (cfg *Config) String() string {
 	JvmsMetadataCachePath: %s
 	JvmLookupPaths: %v
 	JvmVersionRange: %s
-}`, cfg.jvmsMetadataCachePath, cfg.jvmsLookupPaths, &cfg.jvmVersionRange)
+}`, cfg.JvmsMetadataCachePath, cfg.JvmsLookupPaths, &cfg.JvmVersionRange)
 }
 
 type ConfigEntry struct {
@@ -58,7 +61,7 @@ func (cfg ConfigEntry) String() string {
 }`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, cfg.JvmVersionRange)
 }
 
-func loadConfig(defaultConfigPath string, name string) (*Config, error) {
+func LoadConfig(defaultConfigPath string, name string) (*Config, error) {
 	var configs []ConfigEntry
 	configPaths := configPaths(name, defaultConfigPath)
 	for _, path := range configPaths {
@@ -69,7 +72,7 @@ func loadConfig(defaultConfigPath string, name string) (*Config, error) {
 				configs = append(configs, configEntry)
 			}
 		} else {
-			logDebug("Config file %s not found: %v", path, err)
+			log.Debug("Config file %s not found: %v", path, err)
 		}
 	}
 	configs = append(configs, defaultConfigEntry)
@@ -77,7 +80,7 @@ func loadConfig(defaultConfigPath string, name string) (*Config, error) {
 }
 
 func parseConfig(configs []ConfigEntry) (*Config, error) {
-	logDebug("Config entries: %v", configs)
+	log.Debug("Config entries: %v", configs)
 	path, err := jvmsMetadataCachePath(configs)
 	if err != nil {
 		return nil, err
@@ -91,21 +94,21 @@ func parseConfig(configs []ConfigEntry) (*Config, error) {
 		return nil, err
 	}
 	config := Config{
-		jvmsMetadataCachePath: path,
-		jvmsLookupPaths:       lookupPaths,
-		jvmVersionRange:       versionRange,
+		JvmsMetadataCachePath: path,
+		JvmsLookupPaths:       lookupPaths,
+		JvmVersionRange:       versionRange,
 	}
-	logDebug("Resolved config: %s", &config)
+	log.Debug("Resolved config: %s", &config)
 	return &config, nil
 }
 
 func loadConfigFromFile(path string) (ConfigEntry, error) {
-	logDebug("Loading config from %s", path)
+	log.Debug("Loading config from %s", path)
 	configEntry := ConfigEntry{
 		path: path,
 	}
 	file, _ := os.Open(path)
-	defer closeFile(file)
+	defer utils.CloseFile(file)
 	decoder := json.NewDecoder(file)
 	err := decoder.Decode(&configEntry)
 	return configEntry, err
@@ -123,7 +126,7 @@ func configPaths(name string, defaultConfigPath string) []string {
 func jvmsMetadataCachePath(configs []ConfigEntry) (string, error) {
 	for _, cfg := range configs {
 		if cfg.JvmsMetadataCachePath != "" {
-			return resolvePath(cfg.JvmsMetadataCachePath)
+			return utils.ResolvePath(cfg.JvmsMetadataCachePath)
 		}
 	}
 	return "", fmt.Errorf("no JVMs metadata cache path defined in configuration files %v\n", paths(configs))
@@ -132,7 +135,7 @@ func jvmsMetadataCachePath(configs []ConfigEntry) (string, error) {
 func jvmsLookupPaths(configs []ConfigEntry) ([]string, error) {
 	for _, cfg := range configs {
 		if len(cfg.JvmLookupPaths) > 0 {
-			resolvedPaths := resolvePaths(cfg.JvmLookupPaths)
+			resolvedPaths := utils.ResolvePaths(cfg.JvmLookupPaths)
 			if len(resolvedPaths) > 0 {
 				return resolvedPaths, nil
 			}
