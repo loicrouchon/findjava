@@ -36,10 +36,10 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 		"The minimum (inclusive) Java Language Specification version the found JVMs should provide")
 	cmd.UintVar(&args.MaxJavaVersion, "max-java-version", AllVersions,
 		"The maximum (inclusive) Java Language Specification version the found JVMs should provide")
-	cmd.Var(&args.Vendors, "Vendors",
-		"The Vendors to filter on. If empty, no vendor filtering will be done")
-	cmd.Var(&args.Programs, "Programs",
-		"The Programs the JVM should provide in its \"${java.home}/bin\" directory. If empty, defaults to java")
+	cmd.Var(&args.Vendors, "vendors",
+		"The vendors to filter on. If empty, no vendor filtering will be done")
+	cmd.Var(&args.Programs, "programs",
+		"The programs the JVM should provide in its \"${java.home}/bin\" directory. If empty, defaults to java")
 	cmd.StringVar(&args.OutputMode, "output-mode", outputModeBinary,
 		"The output mode of jvm-finder. Possible values are \"java.home\" (the home directory of the selected JVM) "+
 			"and \"binary\" (the path to the desired binary of the selected JVM). If not specified, defaults to binary")
@@ -67,7 +67,7 @@ func validateOutputMode(args Args) error {
 		return nil
 	} else if args.OutputMode == outputModeBinary {
 		if len(args.Programs) > 1 {
-			return fmt.Errorf("output mode \"%s\" cannot be used when multiple Programs are requested. "+
+			return fmt.Errorf("output mode \"%s\" cannot be used when multiple programs are requested. "+
 				"Use \"%s\" instead", args.OutputMode, outputModeJavaHome)
 		}
 		return nil

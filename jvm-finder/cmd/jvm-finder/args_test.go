@@ -54,25 +54,25 @@ func TestParseArgs(t *testing.T) {
 			args.MaxJavaVersion = 17
 		}),
 	}, {
-		args: []string{"--Vendors", "Eclipse Adoptium"},
+		args: []string{"--vendors", "Eclipse Adoptium"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
 			args.Vendors = []string{"Eclipse Adoptium"}
 		}),
 	}, {
-		args: []string{"--Vendors", "Eclipse Adoptium", "--Vendors", "GraalVM Community"},
+		args: []string{"--vendors", "Eclipse Adoptium", "--vendors", "GraalVM Community"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
 			args.Vendors = []string{"Eclipse Adoptium", "GraalVM Community"}
 		}),
 	}, {
-		args: []string{"--Programs", "javac"},
+		args: []string{"--programs", "javac"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
 			args.Programs = []string{"javac"}
 		}),
 	}, {
-		args: []string{"--Programs", "java", "--Programs", "javac", "--Programs", "native-image", "--output-mode", "java.home"},
+		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image", "--output-mode", "java.home"},
 		expected: patch(defaults, func(args *Args) {
 			args.logLevel = "error"
 			args.Programs = []string{"java", "javac", "native-image"}
@@ -110,8 +110,8 @@ func TestParseArgsErrors(t *testing.T) {
 		args: []string{"--log-level=xoxo"},
 		err:  "invalid log level: \"xoxo\". Available levels are: debug, info, warn, error",
 	}, {
-		args: []string{"--Programs", "java", "--Programs", "javac", "--Programs", "native-image"},
-		err: "output mode \"binary\" cannot be used when multiple Programs are requested. " +
+		args: []string{"--programs", "java", "--programs", "javac", "--programs", "native-image"},
+		err: "output mode \"binary\" cannot be used when multiple programs are requested. " +
 			"Use \"java.home\" instead",
 	}, {
 		args: []string{"--output-mode=xoxo"},

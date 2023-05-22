@@ -1,8 +1,9 @@
-BUILD_DIR=$(shell PWD)/build
-JAVA_INFO_SRC=$(shell PWD)/metadata-extractor/JvmMetadataExtractor.java
+CURDIR=$(shell pwd)
+BUILD_DIR=$(CURDIR)/build
+JAVA_INFO_SRC=$(CURDIR)/metadata-extractor/JvmMetadataExtractor.java
 JAVA_BUILD_DIR=$(BUILD_DIR)/classes
 JAVA_INFO_CLASS=$(JAVA_BUILD_DIR)/JvmMetadataExtractor.class
-JVM_FINDER_SOURCES=$(shell PWD)/jvm-finder
+JVM_FINDER_SOURCES=$(CURDIR)/jvm-finder
 GO_BUILD_DIR=$(BUILD_DIR)/go
 MAIN_PROGRAM=$(GO_BUILD_DIR)/jvm-finder
 SOURCES := $(shell find $(JVM_FINDER_SOURCES) -name '*.go')
