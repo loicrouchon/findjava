@@ -1,0 +1,5 @@
+jvm-finder (0.1.0-1) kinetic; urgency=low
+
+  * First debian source package attempt
+
+ -- Loïc Rouchon <loic@loicrouchon.com>  Sat, 21 May 2023 18:45:12 +0200
