@@ -16,9 +16,8 @@ fi
 
 upstream_tarball_name="${package_name}_${version}.tar.gz"
 
-#TODO
-#ref="tags/v${version}"
-ref="heads/main"
+ref="tags/v${version}"
+#ref="heads/${branch}"
 upstream_tarball_url="https://github.com/loicrouchon/jvm-finder/archive/refs/${ref}.tar.gz"
 
 echo "Downloading upstream tarball from ${upstream_tarball_url}"

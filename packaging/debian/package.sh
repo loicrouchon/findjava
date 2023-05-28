@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
-set -ex
+set -x
+#set -e
 
 cur_dir="$(dirname "$(realpath "$0")")"
 
@@ -63,4 +64,4 @@ cd "build/${package_name}" || exit 1
 repack
 check
 build
-upload
+#upload
