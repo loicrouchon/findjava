@@ -10,6 +10,9 @@ GOCACHE=$(BUILD_DIR)/gocache
 override_dh_auto_clean:
 	cd $(CURDIR) && make clean
 
+override_dh_auto_test:
+	cd $(CURDIR) && mkdir -p "$(GOCACHE)" && GOCACHE="$(GOCACHE)" GO_TAGS="-tags linux" make test
+
 override_dh_auto_build:
 	cd $(CURDIR) && mkdir -p "$(GOCACHE)" && GOCACHE="$(GOCACHE)" GO_TAGS="-tags linux" make test build
 
