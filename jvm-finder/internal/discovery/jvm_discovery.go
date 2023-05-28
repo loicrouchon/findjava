@@ -2,7 +2,6 @@ package discovery
 
 import (
 	"fmt"
-	"io/fs"
 	"jvm-finder/internal/log"
 	"jvm-finder/internal/utils"
 	"os"
@@ -55,7 +54,7 @@ func findJavaExecutables(lookUpPath string) ([]JavaExecutable, error) {
 	return []JavaExecutable{}, nil
 }
 
-func javaExecutable(path string, fileInfo fs.FileInfo) []JavaExecutable {
+func javaExecutable(path string, fileInfo os.FileInfo) []JavaExecutable {
 	if fileInfo.Mode()&0111 != 0 {
 		return []JavaExecutable{{
 			path:      path,
