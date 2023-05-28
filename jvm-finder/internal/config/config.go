@@ -7,14 +7,14 @@ import (
 	"jvm-finder/internal/log"
 	"jvm-finder/internal/utils"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 const defaultKey = ""
 
 var defaultConfigEntry = ConfigEntry{
-	path:                  "<DEFAULT>",
-	JvmsMetadataCachePath: "./build/jvm-finder.json",
+	path: "<DEFAULT>",
 	JvmLookupPaths: []string{
 		"$JAVA_HOME/bin/java",
 		"$GRAALVM_HOME/bin/java",
@@ -32,36 +32,36 @@ var defaultConfigEntry = ConfigEntry{
 }
 
 type Config struct {
-	JvmsMetadataCachePath string
-	JvmsLookupPaths       []string
-	JvmVersionRange       VersionRange
+	JvmsMetadataExtractorPath string
+	JvmsMetadataCachePath     string
+	JvmsLookupPaths           []string
+	JvmVersionRange           VersionRange
 }
 
 func (cfg *Config) String() string {
 	return fmt.Sprintf(`{
+    JvmsMetadataExtractorPath : %s
 	JvmsMetadataCachePath: %s
 	JvmLookupPaths: %v
 	JvmVersionRange: %s
-}`, cfg.JvmsMetadataCachePath, cfg.JvmsLookupPaths, &cfg.JvmVersionRange)
+}`, cfg.JvmsMetadataExtractorPath, cfg.JvmsMetadataCachePath, cfg.JvmsLookupPaths, &cfg.JvmVersionRange)
 }
 
 type ConfigEntry struct {
-	path                  string
-	JvmsMetadataCachePath string
-	JvmLookupPaths        []string
-	JvmVersionRange       *VersionRange
+	path            string
+	JvmLookupPaths  []string
+	JvmVersionRange *VersionRange
 }
 
 func (cfg ConfigEntry) String() string {
 	return fmt.Sprintf(`{
 	path: %s
-	JvmsMetadataCachePath: %s
 	JvmLookupPaths: %v
 	JvmVersionRange: %s
-}`, cfg.path, cfg.JvmsMetadataCachePath, cfg.JvmLookupPaths, cfg.JvmVersionRange)
+}`, cfg.path, cfg.JvmLookupPaths, cfg.JvmVersionRange)
 }
 
-func LoadConfig(defaultConfigPath string, name string) (*Config, error) {
+func loadConfig(defaultConfigPath string, name string, cacheDir string, metadataExtractorDir string) (*Config, error) {
 	var configs []ConfigEntry
 	configPaths := configPaths(name, defaultConfigPath)
 	for _, path := range configPaths {
@@ -76,15 +76,11 @@ func LoadConfig(defaultConfigPath string, name string) (*Config, error) {
 		}
 	}
 	configs = append(configs, defaultConfigEntry)
-	return parseConfig(configs)
+	return parseConfig(configs, cacheDir, metadataExtractorDir)
 }
 
-func parseConfig(configs []ConfigEntry) (*Config, error) {
+func parseConfig(configs []ConfigEntry, cachePath string, extractorDir string) (*Config, error) {
 	log.Debug("Config entries: %v", configs)
-	path, err := jvmsMetadataCachePath(configs)
-	if err != nil {
-		return nil, err
-	}
 	lookupPaths, err := jvmsLookupPaths(configs)
 	if err != nil {
 		return nil, err
@@ -94,9 +90,10 @@ func parseConfig(configs []ConfigEntry) (*Config, error) {
 		return nil, err
 	}
 	config := Config{
-		JvmsMetadataCachePath: path,
-		JvmsLookupPaths:       lookupPaths,
-		JvmVersionRange:       versionRange,
+		JvmsMetadataExtractorPath: extractorDir,
+		JvmsMetadataCachePath:     filepath.Join(cachePath, "jvm-finder.json"),
+		JvmsLookupPaths:           lookupPaths,
+		JvmVersionRange:           versionRange,
 	}
 	log.Debug("Resolved config: %s", &config)
 	return &config, nil
@@ -121,15 +118,6 @@ func configPaths(name string, defaultConfigPath string) []string {
 	} else {
 		return []string{defaultConfigPath}
 	}
-}
-
-func jvmsMetadataCachePath(configs []ConfigEntry) (string, error) {
-	for _, cfg := range configs {
-		if cfg.JvmsMetadataCachePath != "" {
-			return utils.ResolvePath(cfg.JvmsMetadataCachePath)
-		}
-	}
-	return "", fmt.Errorf("no JVMs metadata cache path defined in configuration files %v\n", paths(configs))
 }
 
 func jvmsLookupPaths(configs []ConfigEntry) ([]string, error) {

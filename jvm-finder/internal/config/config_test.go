@@ -63,8 +63,8 @@ func TestLoadConfig(t *testing.T) {
 		},
 	}
 	for path, expected := range data {
-		actual, err := LoadConfig(path, defaultKey)
-		description := fmt.Sprintf("LoadConfig(\"%s\", \"%s\")", path, defaultKey)
+		actual, err := loadConfig(path, defaultKey, "", "")
+		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, defaultKey)
 		test.AssertNoError(t, description, err)
 		test.AssertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.JvmsLookupPaths)
 		test.AssertEquals(t, description+".JvmVersionRange()", *expected.JvmVersionRange, actual.JvmVersionRange)
@@ -95,8 +95,8 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 	}
 	for key, expected := range data {
 		path := "test-resources/full-config.json"
-		actual, err := LoadConfig(path, key)
-		description := fmt.Sprintf("LoadConfig(\"%s\", \"%s\")", path, key)
+		actual, err := loadConfig(path, key, "", "")
+		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, key)
 		test.AssertNoError(t, description, err)
 		test.AssertEquals(t, description+".jvmLookupPaths()", expected.JvmLookupPaths, actual.JvmsLookupPaths)
 		test.AssertEquals(t, description+".JvmVersionRange()", *expected.JvmVersionRange, actual.JvmVersionRange)

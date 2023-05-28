@@ -16,10 +16,10 @@ type JvmsInfos struct {
 	Jvms       map[string]*Jvm
 }
 
-func LoadJvmsInfos(path string, javaPaths *JavaExecutables) (JvmsInfos, error) {
-	jvmInfos := loadJvmsInfosFromCache(path)
+func LoadJvmsInfos(metadataReader *MetadataReader, cachePath string, javaPaths *JavaExecutables) (JvmsInfos, error) {
+	jvmInfos := loadJvmsInfosFromCache(cachePath)
 	for javaPath, modTime := range javaPaths.JavaPaths {
-		if err := jvmInfos.Fetch(javaPath, modTime); err != nil {
+		if err := jvmInfos.Fetch(metadataReader, javaPath, modTime); err != nil {
 			return JvmsInfos{}, err
 		}
 	}
@@ -60,21 +60,21 @@ func loadJvmsInfosFromCache(path string) JvmsInfos {
 	return jvmsInfos
 }
 
-func (jvms *JvmsInfos) Fetch(javaPath string, modTime time.Time) error {
+func (jvms *JvmsInfos) Fetch(metadataReader *MetadataReader, javaPath string, modTime time.Time) error {
 	jvms.fetched[javaPath] = true
 	if info, found := jvms.Jvms[javaPath]; !found {
 		log.Info("[CACHE MISS] %s", javaPath)
-		return jvms.doFetch(javaPath)
+		return jvms.doFetch(metadataReader, javaPath)
 	} else if modTime.After(info.FetchedAt) {
 		log.Info("[CACHE OUTDATED] %s", javaPath)
-		return jvms.doFetch(javaPath)
+		return jvms.doFetch(metadataReader, javaPath)
 	} else {
 		return nil
 	}
 }
 
-func (jvms *JvmsInfos) doFetch(javaPath string) error {
-	jvm, err := fetchJvmInfo(javaPath)
+func (jvms *JvmsInfos) doFetch(metadataReader *MetadataReader, javaPath string) error {
+	jvm, err := metadataReader.fetchJvmInfo(javaPath)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (jvms *JvmsInfos) Save() error {
 		if value, found := jvms.fetched[javaPath]; !found || !value {
 			if fileInfo, err := os.Stat(javaPath); err == nil {
 				if fileInfo.ModTime().After(jvmInfo.FetchedAt) {
-					if err := jvms.doFetch(javaPath); err != nil {
+					if err := jvms.doFetch(nil, javaPath); err != nil {
 						return err
 					}
 				}

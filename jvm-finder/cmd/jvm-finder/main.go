@@ -13,24 +13,31 @@ import (
 	"path/filepath"
 )
 
+var platform = config.Platform{
+	ConfigDir:            "../",
+	CacheDir:             "../",
+	MetadataExtractorDir: "../classes/",
+}
+
 func main() {
 	args, err := ParseArgs(os.Args[1:])
 	if err != nil {
 		log.Die(err)
 	}
-	config, err := config.LoadConfig("/etc/jvm-finder/config.json", args.ConfigKey)
+	cfg, err := platform.LoadConfig(os.Args[0], args.ConfigKey)
 	if err != nil {
 		log.Die(err)
 	}
-	javaExecutables, err := discovery.FindAllJavaExecutables(&config.JvmsLookupPaths)
+	javaExecutables, err := discovery.FindAllJavaExecutables(&cfg.JvmsLookupPaths)
 	if err != nil {
 		log.Die(err)
 	}
-	jvmInfos, err := jvm.LoadJvmsInfos(config.JvmsMetadataCachePath, &javaExecutables)
+	metaDataFetcher := &jvm.MetadataReader{Classpath: cfg.JvmsMetadataExtractorPath}
+	jvmInfos, err := jvm.LoadJvmsInfos(metaDataFetcher, cfg.JvmsMetadataCachePath, &javaExecutables)
 	if err != nil {
 		log.Die(err)
 	}
-	rules := rules.SelectionRules(config, args.MinJavaVersion, args.MaxJavaVersion, args.Vendors, args.Programs)
+	rules := rules.SelectionRules(cfg, args.MinJavaVersion, args.MaxJavaVersion, args.Vendors, args.Programs)
 	if jvms := selection.Select(rules, &jvmInfos); len(jvms) > 0 {
 		jvm := jvms[0]
 		selection.LogJvmList("[SELECTED]", jvms[0:1])
