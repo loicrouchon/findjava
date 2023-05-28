@@ -111,7 +111,7 @@ func writeToJson(jvmInfos *JvmsInfos) error {
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(jvmInfos.path, file, 0644); err != nil {
+	if err := utils.WriteFile(jvmInfos.path, file, 0644); err != nil {
 		return log.WrapErr(err, "unable to write to file %s", jvmInfos.path)
 	}
 	return nil
