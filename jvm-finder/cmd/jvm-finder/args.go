@@ -14,6 +14,7 @@ const outputModeBinary = "binary"
 const outputModeJavaHome = "java.home"
 
 type Args struct {
+	version        bool
 	logLevel       string
 	ConfigKey      string
 	MinJavaVersion uint
@@ -28,6 +29,12 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 	cmd := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	output := bytes.NewBufferString("")
 	cmd.SetOutput(output)
+	cmd.Usage = func() {
+		output.WriteString("Usage: jvm-finder [OPTIONS]\n\n")
+		output.WriteString("Options:\n")
+		cmd.PrintDefaults()
+	}
+	cmd.BoolVar(&args.version, "version", false, "Displays the version")
 	cmd.StringVar(&args.logLevel, "log-level", "error",
 		"The log level which is one of: debug, info, warn, error. Defaults to error")
 	cmd.StringVar(&args.ConfigKey, "config-key", "",

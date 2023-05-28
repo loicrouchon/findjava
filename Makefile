@@ -7,6 +7,7 @@ JVM_FINDER_SOURCES=$(CURDIR)/jvm-finder
 GO_BUILD_DIR=$(BUILD_DIR)/go
 MAIN_PROGRAM=$(GO_BUILD_DIR)/jvm-finder
 SOURCES := $(shell find $(JVM_FINDER_SOURCES) -name '*.go')
+VERSION = $(shell cat ./version.txt)
 
 .PHONY: all
 all: format test build
@@ -24,7 +25,7 @@ $(JAVA_INFO_CLASS): $(JAVA_INFO_SRC)
 
 $(MAIN_PROGRAM): $(SOURCES)
 	@mkdir -p "$(GO_BUILD_DIR)"
-	cd $(JVM_FINDER_SOURCES) && go build $(GO_TAGS) -ldflags "-s -w" -o "$(GO_BUILD_DIR)" ./...
+	cd $(JVM_FINDER_SOURCES) && go build $(GO_TAGS) -ldflags "-s -w -X 'main.Version=$(VERSION)'" -o "$(GO_BUILD_DIR)" ./...
 
 .PHONY: format
 format: $(SOURCES)

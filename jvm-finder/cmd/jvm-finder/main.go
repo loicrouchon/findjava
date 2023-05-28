@@ -19,10 +19,19 @@ var platform = config.Platform{
 	MetadataExtractorDir: "../classes/",
 }
 
+var Version = "dev"
+
 func main() {
 	args, err := ParseArgs(os.Args[1:])
 	if err != nil {
 		log.Die(err)
+	}
+	if args.version {
+		console.Writer.Printf("jvm-finder %s\n", Version)
+		return
+	}
+	if args == nil {
+		os.Exit(0)
 	}
 	cfg, err := platform.LoadConfig(os.Args[0], args.ConfigKey)
 	if err != nil {

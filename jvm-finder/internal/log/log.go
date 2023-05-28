@@ -11,7 +11,7 @@ const logLevelWarning = logLevelError + 1
 const logLevelInfo = logLevelWarning + 1
 const logLevelDebug = logLevelInfo + 1
 
-var currentLogLevel uint
+var currentLogLevel uint = logLevelError
 
 func SetLogLevel(level string) error {
 	switch level {
