@@ -2,6 +2,7 @@
 
 BUILD_DIR=$(CURDIR)/build/
 DESTDIR=$(CURDIR)/debian/jvm-finder
+GOCACHE=$(BUILD_DIR)/gocache
 
 %:
 	dh $@
@@ -10,7 +11,7 @@ override_dh_auto_clean:
 	cd $(CURDIR) && make clean
 
 override_dh_auto_build:
-	cd $(CURDIR) && GO_TAGS="-tags linux" make test build
+	cd $(CURDIR) && mkdir -p "$(GOCACHE)" && GOCACHE="$(GOCACHE)" GO_TAGS="-tags linux" make test build
 
 override_dh_auto_install:
 	mkdir -p $(DESTDIR)/usr/bin
