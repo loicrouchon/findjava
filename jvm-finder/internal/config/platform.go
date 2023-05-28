@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"jvm-finder/internal/log"
+	"jvm-finder/internal/utils"
 	"os"
 	"path/filepath"
 )
@@ -41,15 +42,15 @@ func (p *Platform) setSelfPath(self string) error {
 	}
 	p.SelfPath = self
 	selfDir := filepath.Dir(p.SelfPath)
-	p.ConfigDir, err = resolve(selfDir, p.ConfigDir)
+	p.ConfigDir, err = toAbsolutePath(selfDir, p.ConfigDir)
 	if err != nil {
 		return err
 	}
-	p.CacheDir, err = resolve(selfDir, p.CacheDir)
+	p.CacheDir, err = toAbsolutePath(selfDir, p.CacheDir)
 	if err != nil {
 		return err
 	}
-	p.MetadataExtractorDir, err = resolve(selfDir, p.MetadataExtractorDir)
+	p.MetadataExtractorDir, err = toAbsolutePath(selfDir, p.MetadataExtractorDir)
 	if err != nil {
 		return err
 	}
@@ -57,7 +58,11 @@ func (p *Platform) setSelfPath(self string) error {
 	return nil
 }
 
-func resolve(self string, path string) (string, error) {
+func toAbsolutePath(self string, path string) (string, error) {
+	path, err := utils.ResolvePath(path)
+	if err != nil {
+		return "", nil
+	}
 	if filepath.IsAbs(path) {
 		return path, nil
 	}
