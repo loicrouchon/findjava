@@ -18,12 +18,11 @@ type JvmSelectionRules struct {
 }
 
 func (rules *JvmSelectionRules) String() string {
-	return fmt.Sprintf(`{
+	return fmt.Sprintf(`
     VersionRange: %v
     Vendors: %v
     Programs: %v
-    PreferredRules: %v
-}`, rules.VersionRange, rules.Vendors, rules.Programs, rules.PreferredRules)
+    PreferredRules: %v`, rules.VersionRange, rules.Vendors, rules.Programs, rules.PreferredRules)
 }
 
 func (rules *JvmSelectionRules) Matches(jvm *Jvm) bool {

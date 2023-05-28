@@ -39,12 +39,11 @@ type Config struct {
 }
 
 func (cfg *Config) String() string {
-	return fmt.Sprintf(`{
-    JvmsMetadataExtractorPath : %s
-	JvmsMetadataCachePath: %s
-	JvmLookupPaths: %v
-	JvmVersionRange: %s
-}`, cfg.JvmsMetadataExtractorPath, cfg.JvmsMetadataCachePath, cfg.JvmsLookupPaths, &cfg.JvmVersionRange)
+	return fmt.Sprintf(`config:
+	JvmsMetadataExtractorPath :     %s
+	JvmsMetadataCachePath:          %s
+	JvmLookupPaths:                 %v
+	JvmVersionRange:                %s`, cfg.JvmsMetadataExtractorPath, cfg.JvmsMetadataCachePath, cfg.JvmsLookupPaths, &cfg.JvmVersionRange)
 }
 
 type ConfigEntry struct {
@@ -54,11 +53,10 @@ type ConfigEntry struct {
 }
 
 func (cfg ConfigEntry) String() string {
-	return fmt.Sprintf(`{
-	path: %s
-	JvmLookupPaths: %v
-	JvmVersionRange: %s
-}`, cfg.path, cfg.JvmLookupPaths, cfg.JvmVersionRange)
+	return fmt.Sprintf(`config entry:
+	path:               %s
+	JvmLookupPaths:     %v
+	JvmVersionRange:    %s`, cfg.path, cfg.JvmLookupPaths, cfg.JvmVersionRange)
 }
 
 func loadConfig(defaultConfigPath string, name string, cacheDir string, metadataExtractorDir string) (*Config, error) {
