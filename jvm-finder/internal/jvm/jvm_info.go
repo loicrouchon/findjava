@@ -6,6 +6,7 @@ import (
 	"jvm-finder/internal/log"
 	"jvm-finder/internal/utils"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -110,6 +111,9 @@ func writeToJson(jvmInfos *JvmsInfos) error {
 	file, err := json.MarshalIndent(jvmInfos, "", "  ")
 	if err != nil {
 		return err
+	}
+	if err := utils.CreateDirectory(filepath.Dir(jvmInfos.path)); err != nil {
+		return log.WrapErr(err, "unable to create directory to host cache %s", jvmInfos.path)
 	}
 	if err := utils.WriteFile(jvmInfos.path, file, 0644); err != nil {
 		return log.WrapErr(err, "unable to write to file %s", jvmInfos.path)

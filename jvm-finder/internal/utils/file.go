@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+func CreateDirectory(path string) error {
+	return os.MkdirAll(path, 0755)
+}
 func WriteFile(name string, data []byte, perm os.FileMode) error {
 	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
