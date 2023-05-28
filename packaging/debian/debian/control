@@ -9,7 +9,7 @@ Vcs-Git: https://github.com/loicrouchon/jvm-finder.git
 Vcs-Browser: https://github.com/loicrouchon/jvm-finder
 
 Package: jvm-finder
-Architecture: all
+Architecture: arm64 amd64
 Description: jvm-finder is a command-line tool for finding an appropriate installed JVM to run your program.
  .
  It provides a simple and efficient way to specify what version of JVM you want

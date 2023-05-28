@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 
 ANT=ant -f $(CURDIR)/src/packaging/debian/build.xml
-DISTRIBUTION=$(CURDIR)/build/ant/debian/distributions
-DESTDIR=$(CURDIR)/debian/symly
+BUILD_DIR=$(CURDIR)/build/
+DESTDIR=$(CURDIR)/debian/jvm-finder
 
 %:
 	dh $@
@@ -14,14 +14,10 @@ override_dh_auto_build:
 	cd $(CURDIR) && make test build
 
 override_dh_auto_install:
-	# TODO
-#	mkdir -p $(DESTDIR)/usr/share/doc/symly
-#	mkdir -p $(DESTDIR)/usr/bin
-#	mkdir -p $(DESTDIR)/usr/share/java
-#	mkdir -p $(DESTDIR)/usr/share/man/man1
-#	install -p -m 755 $(DISTRIBUTION)/usr/bin/symly $(DESTDIR)/usr/bin/symly
-#	install -p -m 644 $(DISTRIBUTION)/usr/share/java/symly.jar $(DESTDIR)/usr/share/java/symly.jar
-#	install -p -m 644 $(DISTRIBUTION)/usr/share/man/man1/symly.1.gz $(DESTDIR)/usr/share/man/man1/symly.1.gz
-#	install -p -m 644 $(DISTRIBUTION)/usr/share/man/man1/symly-link.1.gz $(DESTDIR)/usr/share/man/man1/symly-link.1.gz
-#	install -p -m 644 $(DISTRIBUTION)/usr/share/man/man1/symly-status.1.gz $(DESTDIR)/usr/share/man/man1/symly-status.1.gz
-#	install -p -m 644 $(DISTRIBUTION)/usr/share/man/man1/symly-unlink.1.gz $(DESTDIR)/usr/share/man/man1/symly-unlink.1.gz
+	mkdir -p $(DESTDIR)/usr/bin
+	mkdir -p $(DESTDIR)/usr/share/jvm-finder
+	mkdir -p $(DESTDIR)/usr/share/jvm-finder/metadata-extractor/
+	mkdir -p $(DESTDIR)/etc/jvm-finder
+	ln -s ../../usr/share/jvm-finder/jvm-finder $(DESTDIR)/usr/bin/jvm-finder
+	install -p -m 755 $(BUILD_DIR)/go/jvm-finder $(DESTDIR)/usr/share/jvm-finder/jvm-finder
+	install -p -m 644 $(BUILD_DIR)/classes/JvmMetadataExtractor.class $(DESTDIR)/usr/share/jvm-finder/metadata-extractor/JvmMetadataExtractor.class
