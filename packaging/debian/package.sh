@@ -33,13 +33,6 @@ check() {
 }
 
 build() {
-    echo "Configure environment:"
-    echo "Configure environment: maintainer name and email"
-    export DEBEMAIL="loic@loicrouchon.com"
-    export DEBFULLNAME="Loic Rouchon"
-    echo "Configure environment: GPG fingerprint"
-    GPG_KEY_FINGERPRINT="C3BB9448B16C971103E876BF3A091A0DF2799262"
-
     echo "Building debian source package ${package_version_dir}"
     (cd "${package_version_dir}" && dpkg-buildpackage --sign-key="${GPG_KEY_FINGERPRINT}" --build=source)
 
@@ -52,16 +45,9 @@ build() {
     cat ./*.changes
 }
 
-upload() {
-    echo "Configure environment: PPA URL"
-    PPA_URL="ppa:loicrouchon/jvm-finder"
-    dput "${PPA_URL}" ./*.changes
-}
-
 "${cur_dir}/../common/clean.sh" "build" "${package_name}"
 cd "build/${package_name}" || exit 1
 "${cur_dir}/../common/download-sources.sh" "${version}"
 repack
 check
 build
-#upload
