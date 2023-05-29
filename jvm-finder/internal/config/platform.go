@@ -28,7 +28,7 @@ func (p *Platform) LoadConfig(key string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return loadConfig(filepath.Join(p.ConfigDir, "config.json"), key, p.CacheDir, p.MetadataExtractorDir)
+	return loadConfig(filepath.Join(p.ConfigDir, "config.conf"), key, p.CacheDir, p.MetadataExtractorDir)
 }
 
 func (p *Platform) setSelfPath() error {
