@@ -25,7 +25,7 @@ $(JAVA_INFO_CLASS): $(JAVA_INFO_SRC)
 
 $(MAIN_PROGRAM): $(SOURCES)
 	@mkdir -p "$(GO_BUILD_DIR)"
-	cd $(JVM_FINDER_SOURCES) && go build $(GO_TAGS) -ldflags "-s -w -X 'main.Version=$(VERSION)'" -o "$(GO_BUILD_DIR)" ./...
+	cd $(JVM_FINDER_SOURCES) && go build $(GO_TAGS) -ldflags "-s -w -X 'main.Version=$(VERSION)' $(GO_LD_FLAGS)" -o "$(GO_BUILD_DIR)" ./...
 
 .PHONY: format
 format: $(SOURCES)
