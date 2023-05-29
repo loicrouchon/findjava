@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-set -x
-#set -e
+set -e
+#set -x
 
 #image="debian:bullseye"
 image="ubuntu:latest"

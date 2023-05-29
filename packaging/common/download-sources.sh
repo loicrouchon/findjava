@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -ex
+set -e
 
 cur_dir="$(dirname "$(realpath "$0")")"
 

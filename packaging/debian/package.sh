@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-set -x
-#set -e
+set -e
+#set -x
 
 cur_dir="$(dirname "$(realpath "$0")")"
 
@@ -33,7 +33,9 @@ check() {
 }
 
 build() {
-    echo "Building debian source package ${package_version_dir}"
+    echo "Building debian binary package ${package_version_dir} (test mode)"
+    (cd "${package_version_dir}" && dpkg-buildpackage --sign-key="${GPG_KEY_FINGERPRINT}" --build=binary)
+    echo "Building debian source package ${package_version_dir} (for upload)"
     (cd "${package_version_dir}" && dpkg-buildpackage --sign-key="${GPG_KEY_FINGERPRINT}" --build=source)
 
     ls -l

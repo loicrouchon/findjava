@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -ex
+set -e
 
 if [ "$#" -ne 2 ]; then
   echo "Error: Invalid number of arguments. Expected 2 arguments."
