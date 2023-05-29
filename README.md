@@ -51,6 +51,29 @@ managers.
 
 ## Installation
 
+The goal is for jvm-finder to be available in as many package managers for Linux, macOS and Windows as possible so that you can depend on it when packaging your application in those package managers.
+
+For the moment, we are not there, but we're progressing.
+
+### Ubuntu (23.04 and above)
+
+```shell
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:loicrouchon/symly
+sudo apt update
+sudo apt install jvm-finder
+```
+
+### Fedora (37 and above)
+
+```shell
+sudo dnf install 'dnf-command(copr)'
+sudo dnf copr enable loicrouchon/symly
+sudo dnf install jvm-finder
+```
+
+### Homebrew (macOS/Linux)
+
 > _**WORK IN PROGRESS**_: To be usable, jvm-finder needs to be available in package managers
 
 ## Usage
