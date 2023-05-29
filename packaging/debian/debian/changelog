@@ -1,3 +1,9 @@
+jvm-finder (0.2.3-1~lunar) lunar; urgency=low
+
+  * Fix configuration loading
+
+ -- Loïc Rouchon <loic@loicrouchon.com>  Mon, 29 May 2023 19:25:00 +0200
+
 jvm-finder (0.2.1-1~lunar) lunar; urgency=low
 
   * Migrate configuration format to .conf properties file
