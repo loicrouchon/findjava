@@ -7,7 +7,7 @@ cur_dir="$(dirname "$(realpath "$0")")"
 cd "${cur_dir}/build"
 rm -rf "fedora-copr-symly"
 echo "Preparing publication (cloning fedora copr repository)"
-git clone https://github.com/loicrouchon/fedora-copr-symly
+git clone git@github.com:loicrouchon/fedora-copr-symly.git
 cd "fedora-copr-symly"
 cp ../jvm-finder/jvm-finder.spec jvm-finder.spec
 git add jvm-finder.spec
