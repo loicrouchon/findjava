@@ -1,3 +1,9 @@
+jvm-finder (0.1.3-1~lunar) lunar; urgency=low
+
+  * Package for Ubuntu Lunar
+
+ -- Loïc Rouchon <loic@loicrouchon.com>  Sat, 29 May 2023 12:53:00 +0200
+
 jvm-finder (0.1.3-1) kinetic; urgency=low
 
   * First debian source package attempt
