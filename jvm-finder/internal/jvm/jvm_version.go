@@ -38,7 +38,7 @@ func str(version uint) string {
 	}
 }
 
-func parseJavaSpecificationVersion(version string) (uint, error) {
+func ParseJavaSpecificationVersion(version string) (uint, error) {
 	var javaSpecificationVersion uint
 	switch version {
 	case "1.0", "1.1":

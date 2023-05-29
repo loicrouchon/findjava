@@ -1,7 +1,7 @@
 package config
 
 import (
-	"encoding/json"
+	"bufio"
 	"fmt"
 	. "jvm-finder/internal/jvm"
 	"jvm-finder/internal/log"
@@ -102,16 +102,70 @@ func loadConfigFromFile(path string) (ConfigEntry, error) {
 	configEntry := ConfigEntry{
 		path: path,
 	}
-	file, _ := os.Open(path)
+	file, err := os.Open(path)
+	if err != nil {
+		return configEntry, err
+	}
 	defer utils.CloseFile(file)
-	decoder := json.NewDecoder(file)
-	err := decoder.Decode(&configEntry)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(strings.SplitN(line, "#", 2)[0])
+		if len(line) > 0 && strings.Contains(line, "=") {
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) != 2 {
+				return configEntry, fmt.Errorf("invalid configuration entry in file %s: %s", path, line)
+			}
+			key := parts[0]
+			value := parts[1]
+			if err := processLine(&configEntry, key, value); err != nil {
+				return configEntry, log.WrapErr(err, "invalid configuration entry in file %s for key '%s' and value '%s'", configEntry.path, key, value)
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return configEntry, err
+	}
 	return configEntry, err
+}
+
+func processLine(configEntry *ConfigEntry, key string, value string) error {
+	if key == "jvm.lookup.paths" {
+		var paths []string
+		for _, p := range strings.Split(value, ",") {
+			paths = append(paths, strings.TrimSpace(p))
+		}
+		configEntry.JvmLookupPaths = paths
+	} else if key == "java.specification.version.min" {
+		initJvmVersionRange(configEntry)
+		version, err := ParseJavaSpecificationVersion(value)
+		if err != nil {
+			return err
+		}
+		configEntry.JvmVersionRange.Min = version
+
+	} else if key == "java.specification.version.max" {
+		initJvmVersionRange(configEntry)
+		version, err := ParseJavaSpecificationVersion(value)
+		if err != nil {
+			return err
+		}
+		configEntry.JvmVersionRange.Max = version
+	} else {
+		return fmt.Errorf("unknown key '%s'", key)
+	}
+	return nil
+}
+
+func initJvmVersionRange(configEntry *ConfigEntry) {
+	if configEntry.JvmVersionRange == nil {
+		configEntry.JvmVersionRange = &VersionRange{}
+	}
 }
 
 func configPaths(name string, defaultConfigPath string) []string {
 	if name != defaultKey {
-		specificConfigPath := strings.TrimSuffix(defaultConfigPath, ".json") + "." + name + ".json"
+		specificConfigPath := strings.TrimSuffix(defaultConfigPath, ".conf") + "." + name + ".conf"
 		return []string{specificConfigPath, defaultConfigPath}
 	} else {
 		return []string{defaultConfigPath}

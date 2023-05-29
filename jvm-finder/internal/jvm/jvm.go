@@ -17,7 +17,7 @@ type Jvm struct {
 func (jvm *Jvm) rebuild() error {
 	jvm.JavaHome = jvm.SystemProperties["java.home"]
 	jvm.JavaVendor = jvm.SystemProperties["java.vendor"]
-	if specVersion, err := parseJavaSpecificationVersion(jvm.SystemProperties["java.specification.version"]); err != nil {
+	if specVersion, err := ParseJavaSpecificationVersion(jvm.SystemProperties["java.specification.version"]); err != nil {
 		return err
 	} else {
 		jvm.JavaSpecificationVersion = specVersion

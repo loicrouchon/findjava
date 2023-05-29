@@ -8,6 +8,30 @@ import (
 	"testing"
 )
 
+func TestLoadInvalidConfig(t *testing.T) {
+	data := map[string][]string{
+		"test-resources/invalid.conf": {
+			"invalid configuration entry in file test-resources/invalid.conf for key 'non.existing.property' and value 'value'",
+			"unknown key 'non.existing.property'",
+		},
+		"test-resources/invalid-min-java-version.conf": {
+			"invalid configuration entry in file test-resources/invalid-min-java-version.conf for key 'java.specification.version.min' and value '-1'",
+			"JVM version '-1' cannot be parsed as an unsigned int",
+		},
+		"test-resources/invalid-max-java-version.conf": {
+			"invalid configuration entry in file test-resources/invalid-max-java-version.conf for key 'java.specification.version.max' and value 'this is obviously invalid'",
+			"JVM version 'this is obviously invalid' cannot be parsed as an unsigned int",
+		},
+	}
+	for path, expected := range data {
+		_, err := loadConfig(path, defaultKey, "", "")
+		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, defaultKey)
+		for _, e := range expected {
+			test.AssertErrorContains(t, description, e, err)
+		}
+	}
+}
+
 func TestLoadConfig(t *testing.T) {
 	defaultJvmLookupPath := utils.ResolvePaths([]string{
 		"$JAVA_HOME/bin/java",
@@ -24,15 +48,15 @@ func TestLoadConfig(t *testing.T) {
 		Max: 0,
 	}
 	data := map[string]ConfigEntry{
-		"test-resources/missing-config.json": {
+		"test-resources/missing.conf": {
 			JvmLookupPaths:  defaultJvmLookupPath,
 			JvmVersionRange: defaultJvmVersionRange,
 		},
-		"test-resources/empty-config.json": {
+		"test-resources/empty.conf": {
 			JvmLookupPaths:  defaultJvmLookupPath,
 			JvmVersionRange: defaultJvmVersionRange,
 		},
-		"test-resources/path-lookup-config.json": {
+		"test-resources/path-lookup.conf": {
 			JvmLookupPaths: utils.ResolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
@@ -40,13 +64,13 @@ func TestLoadConfig(t *testing.T) {
 			}),
 			JvmVersionRange: defaultJvmVersionRange,
 		},
-		"test-resources/min-jvm-version-config.json": {
+		"test-resources/min-jvm-version.conf": {
 			JvmLookupPaths: defaultJvmLookupPath,
 			JvmVersionRange: &VersionRange{
 				Min: 8,
 			},
 		},
-		"test-resources/full-config.json": {
+		"test-resources/full.conf": {
 			JvmLookupPaths: utils.ResolvePaths([]string{
 				"/usr/bin/java",
 				"/usr/lib/jvm",
@@ -56,10 +80,6 @@ func TestLoadConfig(t *testing.T) {
 				Min: 8,
 				Max: 17,
 			},
-		},
-		"test-resources/invalid-config.json": {
-			JvmLookupPaths:  defaultJvmLookupPath,
-			JvmVersionRange: defaultJvmVersionRange,
 		},
 	}
 	for path, expected := range data {
@@ -89,12 +109,12 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 				"~/.sdkman/candidates/java",
 			}),
 			JvmVersionRange: &VersionRange{
-				Min: 11,
+				Max: 11,
 			},
 		},
 	}
 	for key, expected := range data {
-		path := "test-resources/full-config.json"
+		path := "test-resources/full.conf"
 		actual, err := loadConfig(path, key, "", "")
 		description := fmt.Sprintf("loadConfig(\"%s\", \"%s\")", path, key)
 		test.AssertNoError(t, description, err)

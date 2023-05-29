@@ -23,8 +23,8 @@ func TestParseVersion(t *testing.T) {
 		versions[strconv.Itoa(i)] = uint(i)
 	}
 	for versionToParse, expected := range versions {
-		actual, err := parseJavaSpecificationVersion(versionToParse)
-		description := fmt.Sprintf("parseJavaSpecificationVersion(%s)", versionToParse)
+		actual, err := ParseJavaSpecificationVersion(versionToParse)
+		description := fmt.Sprintf("ParseJavaSpecificationVersion(%s)", versionToParse)
 		test.AssertNoError(t, description, err)
 		test.AssertEquals(t, description, expected, actual)
 	}
@@ -37,8 +37,8 @@ func TestParseVersionError(t *testing.T) {
 		"one": "JVM version 'one' cannot be parsed as an unsigned int",
 	}
 	for versionToParse, expected := range versions {
-		_, err := parseJavaSpecificationVersion(versionToParse)
-		description := fmt.Sprintf("parseJavaSpecificationVersion(%s)", versionToParse)
+		_, err := ParseJavaSpecificationVersion(versionToParse)
+		description := fmt.Sprintf("ParseJavaSpecificationVersion(%s)", versionToParse)
 		test.AssertErrorContains(t, description, expected, err)
 	}
 }

@@ -24,4 +24,4 @@ override_dh_auto_install:
 	ln -s ../../usr/share/jvm-finder/jvm-finder $(DESTDIR)/usr/bin/jvm-finder
 	install -p -m 755 $(BUILD_DIR)/go/jvm-finder $(DESTDIR)/usr/share/jvm-finder/jvm-finder
 	install -p -m 644 $(BUILD_DIR)/classes/JvmMetadataExtractor.class $(DESTDIR)/usr/share/jvm-finder/metadata-extractor/JvmMetadataExtractor.class
-	install -p -m 644 $(CURDIR)/packaging/debian/config.json $(DESTDIR)/etc/jvm-finder
+	install -p -m 644 $(CURDIR)/packaging/debian/config.conf $(DESTDIR)/etc/jvm-finder
