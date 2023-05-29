@@ -19,8 +19,8 @@ upstream_tarball_name="${package_name}_${version}.orig.tar.gz"
 
 repack() {
     echo "Repacking upstream tarball ${upstream_tarball_name} (get rid off root level directory)"
-    find . -maxdepth 1 -type d -name "${package_name}-*" -exec mv {} "${package_version_dir}" \;
-    (cd "${package_version_dir}" && tar czf "../${upstream_tarball_name}" ./* ./.*)
+    find . -maxdepth 1 -type d -name "${package_name}-*" -exec mv {} "${package_version_dir}" \; || true
+    tar czf "${upstream_tarball_name}" "${package_version_dir}"
     echo "Add debian dir"
     cp -R "${cur_dir}/debian" "${package_version_dir}/debian"
 }
