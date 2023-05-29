@@ -33,7 +33,7 @@ func main() {
 	if args == nil {
 		os.Exit(0)
 	}
-	cfg, err := platform.LoadConfig(os.Args[0], args.ConfigKey)
+	cfg, err := platform.LoadConfig(args.ConfigKey)
 	if err != nil {
 		log.Die(err)
 	}

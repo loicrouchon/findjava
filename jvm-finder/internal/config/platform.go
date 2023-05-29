@@ -23,16 +23,20 @@ func (p *Platform) String() string {
 	metadata extractor directory:   %s`, p.SelfPath, p.ConfigDir, p.CacheDir, p.MetadataExtractorDir)
 }
 
-func (p *Platform) LoadConfig(selfPath string, key string) (*Config, error) {
-	err := p.setSelfPath(selfPath)
+func (p *Platform) LoadConfig(key string) (*Config, error) {
+	err := p.setSelfPath()
 	if err != nil {
 		return nil, err
 	}
 	return loadConfig(filepath.Join(p.ConfigDir, "config.json"), key, p.CacheDir, p.MetadataExtractorDir)
 }
 
-func (p *Platform) setSelfPath(self string) error {
-	self, err := filepath.EvalSymlinks(os.Args[0])
+func (p *Platform) setSelfPath() error {
+	self, err := os.Executable()
+	if err != nil {
+		return log.WrapErr(err, "unable to resolve jvm-finder self location")
+	}
+	self, err = filepath.EvalSymlinks(self)
 	if err != nil {
 		return log.WrapErr(err, "unable to resolve jvm-finder self location")
 	}
