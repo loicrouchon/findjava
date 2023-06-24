@@ -1,16 +1,16 @@
-Source: jvm-finder
+Source: findjvm
 Section: utils
 Priority: standard
 Maintainer: Loïc Rouchon <loic@loicrouchon.com>
 Build-Depends: debhelper (>= 11), golang, default-jdk-headless
 Standards-Version: 4.5.1
-Homepage: https://github.com/loicrouchon/jvm-finder
-Vcs-Git: https://github.com/loicrouchon/jvm-finder.git
-Vcs-Browser: https://github.com/loicrouchon/jvm-finder
+Homepage: https://github.com/loicrouchon/findjvm
+Vcs-Git: https://github.com/loicrouchon/findjvm.git
+Vcs-Browser: https://github.com/loicrouchon/findjvm
 
-Package: jvm-finder
+Package: findjvm
 Architecture: arm64 amd64
-Description: jvm-finder is a command-line tool for finding an appropriate installed JVM to run your program.
+Description: findjvm is a command-line tool for finding an appropriate installed JVM to run your program.
  .
  It provides a simple and efficient way to specify what version of JVM you want
  and what kind of features (java, javac, native-image, ...) it should provide.

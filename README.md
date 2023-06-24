@@ -1,6 +1,6 @@
-# jvm-finder
+# findjvm
 
-`jvm-finder` is a tool which goal is to find the best JVM to run your java program according to your program's specific
+`findjvm` is a tool which goal is to find the best JVM to run your java program according to your program's specific
 constraints.
 
 ## Motivations
@@ -34,8 +34,8 @@ There are three actors involved in this problem:
 
 ## Goal
 
-The goal of jvm-finder is to provide a solution to this problem while having a minimal impact on programs startup time.
-It is not a goal of jvm-finder to provide a way to install JVMs, as this is still the responsibility of package
+The goal of findjvm is to provide a solution to this problem while having a minimal impact on programs startup time.
+It is not a goal of findjvm to provide a way to install JVMs, as this is still the responsibility of package
 managers.
 
 ## Features
@@ -51,7 +51,7 @@ managers.
 
 ## Installation
 
-The goal is for jvm-finder to be available in as many package managers for Linux, macOS and Windows as possible so that you can depend on it when packaging your application in those package managers.
+The goal is for findjvm to be available in as many package managers for Linux, macOS and Windows as possible so that you can depend on it when packaging your application in those package managers.
 
 For the moment, we are not there, but we're progressing.
 
@@ -61,7 +61,7 @@ For the moment, we are not there, but we're progressing.
 sudo apt install software-properties-common
 sudo add-apt-repository ppa:loicrouchon/symly
 sudo apt update
-sudo apt install jvm-finder
+sudo apt install findjvm
 ```
 
 ### Fedora (37 and above)
@@ -69,19 +69,19 @@ sudo apt install jvm-finder
 ```shell
 sudo dnf install 'dnf-command(copr)'
 sudo dnf copr enable loicrouchon/symly
-sudo dnf install jvm-finder
+sudo dnf install findjvm
 ```
 
 ### Homebrew (macOS/Linux)
 
-> _**WORK IN PROGRESS**_: To be usable, jvm-finder needs to be available in package managers
+> _**WORK IN PROGRESS**_: To be usable, findjvm needs to be available in package managers
 
 ## Usage
 
-To use jvm-finder, you need to call it from your start script or command line with the following arguments:
+To use findjvm, you need to call it from your start script or command line with the following arguments:
 
 ```shell
-JAVA="$(jvm-finder --min-java-version=11)"
+JAVA="$(findjvm --min-java-version=11)"
 "$JAVA" ...
 ```
 
@@ -93,18 +93,18 @@ JAVA="$(jvm-finder --min-java-version=11)"
 - `--max-java-version <version>`: the maximum version of the java specification required to run the application.
   If `--min-java-version` is specified, defaults to `0` meaning no maximum version filtering.If
   both `--min-java-version` and `--max-java-version` are not specified, falls back on the configuration.
-- `--vendors <vendor>`: (repeatable) a list of JVM vendors to choose from. If specified, jvm-finder will only consider
+- `--vendors <vendor>`: (repeatable) a list of JVM vendors to choose from. If specified, findjvm will only consider
   JVMs from this vendor. If not specified, not vendor filtering will happen
 - `--programs <program>`: (repeatable) a list of programs the JVM must provide in their `$JAVA_HOME/bin` directory. If
   more than one program is provided, the output will automatically be in `java.home` mode. If not specified, defaults
   to `java`.
-- `--output-mode <output-mode>`: the output mode of jvm-finder. Possible values are `java.home` (the `java.home`
+- `--output-mode <output-mode>`: the output mode of findjvm. Possible values are `java.home` (the `java.home`
   directory of
   the selected JVM) and `binary` (the path to the desired binary of the selected JVM). If not specified, defaults
   to `binary`.
 
 > Java specification versions can be specified in a simplified way as integers 1, 2, 8, 20.
-> jvm-finder will know that 1.8 and 8 are the same version.
+> findjvm will know that 1.8 and 8 are the same version.
 
 ## Configuration
 
@@ -151,17 +151,17 @@ The filtering is split in two steps:
 1. Applying the strong filtering constraints (i.e. specified on the command line)
 2. Applying the weak filtering constraints (i.e. coming from the configuration)
 
-The reasoning is the following: The startup script calling jvm-finder is the most knowledgeable about the requirements
-of the program it will need to run. Therefore, constraints expressed as arguments when calling `jvm-finder` are
+The reasoning is the following: The startup script calling findjvm is the most knowledgeable about the requirements
+of the program it will need to run. Therefore, constraints expressed as arguments when calling `findjvm` are
 considered strong.
 
-On the other side, system configuration will be considered as recommendations and `jvm-finder` will try to fulfill those
+On the other side, system configuration will be considered as recommendations and `findjvm` will try to fulfill those
 as much as possible.
 
-If strong constraints can be satisfied but not the recommendations from the system configuration, `jvm-finder` will
+If strong constraints can be satisfied but not the recommendations from the system configuration, `findjvm` will
 ignore the recommendations and select a JVM only based on the strong constraints.
 
-> **Note**: If no `--min-java-version`/`--max-java-version` is specified on the command line, `jvm-finder` will not consider
+> **Note**: If no `--min-java-version`/`--max-java-version` is specified on the command line, `findjvm` will not consider
 > to have strong recommendations. In this case, if system recommendations cannot be fulfilled, it will fail.
 > _This behavior might be revisited in the near future_.
 >
@@ -174,7 +174,7 @@ which one of those shall be used.
 
 This process will return the JVM implementing the highest `java.specification.version`.
 If multiple JVMs implement the same `java.specification.version` one will be selected. This selection process is not
-specified at the moment nor deterministic. Future versions of `jvm-finder` might provide rules for preferred JVM
+specified at the moment nor deterministic. Future versions of `findjvm` might provide rules for preferred JVM
 selection in such a case.
 
 ## Building the application
@@ -194,5 +194,5 @@ make
 Once built, you can run it with
 
 ```shell
-./build/go/jvm-finder
+./build/go/findjvm
 ```

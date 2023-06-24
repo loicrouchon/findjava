@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 BUILD_DIR=$(CURDIR)/build/
-DESTDIR=$(CURDIR)/debian/jvm-finder
+DESTDIR=$(CURDIR)/debian/findjvm
 GOCACHE=$(BUILD_DIR)/gocache
 
 %:
@@ -18,10 +18,10 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	mkdir -p $(DESTDIR)/usr/bin
-	mkdir -p $(DESTDIR)/usr/share/jvm-finder
-	mkdir -p $(DESTDIR)/usr/share/jvm-finder/metadata-extractor/
-	mkdir -p $(DESTDIR)/etc/jvm-finder
-	ln -s ../../usr/share/jvm-finder/jvm-finder $(DESTDIR)/usr/bin/jvm-finder
-	install -p -m 755 $(BUILD_DIR)/go/jvm-finder $(DESTDIR)/usr/share/jvm-finder/jvm-finder
-	install -p -m 644 $(BUILD_DIR)/classes/JvmMetadataExtractor.class $(DESTDIR)/usr/share/jvm-finder/metadata-extractor/JvmMetadataExtractor.class
-	install -p -m 644 $(CURDIR)/packaging/debian/config.conf $(DESTDIR)/etc/jvm-finder
+	mkdir -p $(DESTDIR)/usr/share/findjvm
+	mkdir -p $(DESTDIR)/usr/share/findjvm/metadata-extractor/
+	mkdir -p $(DESTDIR)/etc/findjvm
+	ln -s ../../usr/share/findjvm/findjvm $(DESTDIR)/usr/bin/findjvm
+	install -p -m 755 $(BUILD_DIR)/go/findjvm $(DESTDIR)/usr/share/findjvm/findjvm
+	install -p -m 644 $(BUILD_DIR)/classes/JvmMetadataExtractor.class $(DESTDIR)/usr/share/findjvm/metadata-extractor/JvmMetadataExtractor.class
+	install -p -m 644 $(CURDIR)/packaging/debian/config.conf $(DESTDIR)/etc/findjvm
