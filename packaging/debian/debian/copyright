@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: findjvm
+Upstream-Name: findjava
 Upstream-Contact: <loic@loicrouchon.com>
-Source: https://github.com/loicrouchon/findjvm
+Source: https://github.com/loicrouchon/findjava
 
 Files: *
 Copyright: 2020, Loïc Rouchon

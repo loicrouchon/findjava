@@ -17,7 +17,7 @@ fi
 
 build() {
     echo "Building fedora source package ${package_version_dir}"
-    sed "s/\${version}/${version}/" "${cur_dir}/findjvm.spec" > "build/${package_name}/findjvm.spec"
+    sed "s/\${version}/${version}/" "${cur_dir}/findjava.spec" > "build/${package_name}/findjava.spec"
 }
 
 "${cur_dir}/../common/clean.sh" "build" "${package_name}"

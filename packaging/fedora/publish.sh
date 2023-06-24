@@ -9,7 +9,7 @@ rm -rf "fedora-copr-symly"
 echo "Preparing publication (cloning fedora copr repository)"
 git clone git@github.com:loicrouchon/fedora-copr-symly.git
 cd "fedora-copr-symly"
-cp ../findjvm/findjvm.spec findjvm.spec
-git add findjvm.spec
-git commit -m "Publish findjvm $(cat findjvm.spec | grep 'Version:' | tr -d ' ' | tr ':' ' ')"
+cp ../findjava/findjava.spec findjava.spec
+git add findjava.spec
+git commit -m "Publish findjava $(cat findjava.spec | grep 'Version:' | tr -d ' ' | tr ':' ' ')"
 git push

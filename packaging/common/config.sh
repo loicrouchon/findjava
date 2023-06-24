@@ -6,5 +6,5 @@ if [ -z "$version" ]; then
     exit 1
 fi
 
-package_name="findjvm"
+package_name="findjava"
 package_version_dir="${package_name}-${version}"

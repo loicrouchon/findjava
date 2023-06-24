@@ -3,9 +3,9 @@ BUILD_DIR=$(CURDIR)/build
 JAVA_INFO_SRC=$(CURDIR)/metadata-extractor/JvmMetadataExtractor.java
 JAVA_BUILD_DIR=$(BUILD_DIR)/classes
 JAVA_INFO_CLASS=$(JAVA_BUILD_DIR)/JvmMetadataExtractor.class
-JVM_FINDER_SOURCES=$(CURDIR)/findjvm
+JVM_FINDER_SOURCES=$(CURDIR)/findjava
 GO_BUILD_DIR=$(BUILD_DIR)/go
-MAIN_PROGRAM=$(GO_BUILD_DIR)/findjvm
+MAIN_PROGRAM=$(GO_BUILD_DIR)/findjava
 SOURCES := $(shell find $(JVM_FINDER_SOURCES) -name '*.go')
 VERSION = $(shell cat ./version.txt)
 
