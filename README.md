@@ -74,7 +74,9 @@ sudo dnf install findjava
 
 ### Homebrew (macOS/Linux)
 
-> _**WORK IN PROGRESS**_: To be usable, findjava needs to be available in package managers
+```shell
+brew install loicrouchon/symly/findjava
+```
 
 ## Usage
 
