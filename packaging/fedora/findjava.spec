@@ -22,7 +22,7 @@ and what kind of features (java, javac, native-image, ...) it should provide.
 
 %setup -q -n findjava-${version}
 %build
-GO_LD_FLAGS='-linkmode=external' make test build
+GO_LD_FLAGS='-linkmode=external' GO_TAGS="-tags linux" make test build
 
 %install
 %define distdir build
