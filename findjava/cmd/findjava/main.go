@@ -16,7 +16,7 @@ import (
 var platform = config.Platform{
 	ConfigDir:            "../",
 	CacheDir:             "../",
-	MetadataExtractorDir: "../classes/",
+	MetadataExtractorDir: "./metadata-extractor/",
 }
 
 var Version = "dev"

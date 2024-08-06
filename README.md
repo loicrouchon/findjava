@@ -196,5 +196,5 @@ make
 Once built, you can run it with
 
 ```shell
-./build/go/findjava
+./build/dist/findjava
 ```

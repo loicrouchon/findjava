@@ -1,10 +1,10 @@
 CURDIR=$(shell pwd)
 BUILD_DIR=$(CURDIR)/build
 JAVA_INFO_SRC=$(CURDIR)/metadata-extractor/JvmMetadataExtractor.java
-JAVA_BUILD_DIR=$(BUILD_DIR)/classes
+JAVA_BUILD_DIR=$(BUILD_DIR)/dist/metadata-extractor
 JAVA_INFO_CLASS=$(JAVA_BUILD_DIR)/JvmMetadataExtractor.class
 JVM_FINDER_SOURCES=$(CURDIR)/findjava
-GO_BUILD_DIR=$(BUILD_DIR)/go
+GO_BUILD_DIR=$(BUILD_DIR)/dist
 MAIN_PROGRAM=$(GO_BUILD_DIR)/findjava
 SOURCES := $(shell find $(JVM_FINDER_SOURCES) -name '*.go')
 VERSION = $(shell cat ./version.txt)
@@ -14,7 +14,7 @@ all: format test build
 
 .PHONY: clean
 clean:
-	rm  -rf "$(BUILD_DIR)"
+	rm -rf "$(BUILD_DIR)"
 
 .PHONY: build
 build: $(JAVA_INFO_CLASS) $(MAIN_PROGRAM)
