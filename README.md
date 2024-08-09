@@ -193,7 +193,14 @@ The application can then be built with:
 make
 ```
 
-Once built, you can run it with
+> Be aware of the default configuration when building the application.
+> By default, a development build will be created (configuration from [main.go](findjava/cmd/findjava/main.go)).
+> This can be changed to one of the following tags: [darwin](findjava/cmd/findjava/darwin.go),
+> [standalone_linux](findjava/cmd/findjava/standalone_linux.go), [debian](findjava/cmd/findjava/debian.go).
+> To do so, set the `GO_TAGS` environment variable before calling `make` as follows: `GO_TAGS="-tags <TAG>"`.
+> For example: `GO_TAGS="-tags debian" make` to build a binary customized for debian.
+
+Once built, you can run it with:
 
 ```shell
 ./build/dist/findjava

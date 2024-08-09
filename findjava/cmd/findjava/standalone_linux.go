@@ -1,5 +1,5 @@
-//go:build linux
-// +build linux
+//go:build standalone_linux
+// +build standalone_linux
 
 package main
 
