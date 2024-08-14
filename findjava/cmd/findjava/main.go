@@ -16,6 +16,14 @@ import (
 
 var Version = "dev"
 
+// main is the entrypoint of findjava applying the following steps:
+//   - Load the requested configuration ([config.Platform.LoadConfig]).
+//   - Discover existing JVMs according to configured lookup locations ([discovery.FindAllJavaExecutables]).
+//   - Extract information from found JVMs ([jvm.LoadJvmsInfos]).
+//     This process is an expensive operation and individual results are cached.
+//   - Build the rules which will be applied to select a JVM ([rules.SelectionRules]).
+//   - Apply the rules to the found JVM to select a JVM ([selection.Select]).
+//   - Outputs the selected JVM using the requested output mode: binary vs java.home ([processOutput]).
 func main() {
 	args, err := ParseArgs(os.Args[1:])
 	if err != nil {

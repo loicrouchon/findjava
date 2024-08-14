@@ -8,10 +8,15 @@ import (
 	"path/filepath"
 )
 
+// Platform contains information that are platform dependent.
 type Platform struct {
-	SelfPath             string
-	ConfigDir            string
-	CacheDir             string
+	// SelfPath The path to the findjava binary.
+	SelfPath string
+	// ConfigDir The path to the directory holding the configuration of findjava.
+	ConfigDir string
+	// CacheDir The path to the directory in which JVMs metadata will be cached.
+	CacheDir string
+	// MetadataExtractorDir The path to the directory in which the JvmMetadataExtractor is located.
 	MetadataExtractorDir string
 }
 
@@ -23,6 +28,20 @@ func (p *Platform) String() string {
 	metadata extractor directory:   %s`, p.SelfPath, p.ConfigDir, p.CacheDir, p.MetadataExtractorDir)
 }
 
+// LoadConfig loads the configuration for the given [Platform] into a [Config] object.
+//
+// Configurations will be loaded from three different sources:
+//
+//   - specific configuration file: `p.ConfigDir + "/config." + key + ".conf"`
+//   - system configuration file:   `p.ConfigDir + "/config.conf"`
+//   - default configuration:       constant [defaultConfigEntry]
+//
+// Those configurations sources are merged together into a single [Config] object.
+// The merge algorithm works at property level. It resolves each property individually looking for it first in the
+// specific configuration file (if it exists). If the property is not found, it then tries in the system configuration
+// file. If still not found, the default value from the [defaultConfigEntry] will be used.
+// This mechanism allows most specific configuration sources to override values from lower priority configuration
+// sources without requiring to redefine the whole configuration.
 func (p *Platform) LoadConfig(key string) (*Config, error) {
 	err := p.Resolve()
 	if err != nil {

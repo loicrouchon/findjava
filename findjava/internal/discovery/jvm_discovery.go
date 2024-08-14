@@ -22,6 +22,21 @@ func (javaExecutable *JavaExecutable) String() string {
 	return fmt.Sprintf(`{timestamp: %-30s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
 }
 
+// FindAllJavaExecutables locates all JVMs present in the `jvmLookupPaths`.
+// Each path must either be an absolute path or a path relative to the user home (~).
+//
+// Paths are preprocessed to resolve environment variables (e.g. $JAVA_HOME, $JAVA_HOME/bin/java, etc.) and
+// the user's home directory (e.g. ~/.sdkman/candidates/java).
+//
+// JVMs will be discovered for a given path in the following use cases:
+//
+//   - The path points to a file (after resolving symbolic links) that is executable
+//     (e.g. /usr/bin/java, $JAVA_HOME/bin/java, etc.).
+//   - The path points to a directory that contains (after resolving symbolic links) a bin/java executable
+//     (e.g. $JAVA_HOME, $GRAALVM_HOME, etc.).
+//   - If no bin/java executable is found, all direct subdirectories will be checked for <subdirectory>/bin/java
+//     executables (e.g. /usr/lib/jvm, ~/.sdkman/candidates/java, /System/Volumes/Data/Library/Java/JavaVirtualMachines,
+//     etc.). This will not recurse into subdirectories of subdirectories.
 func FindAllJavaExecutables(javaLookUpPaths *[]string) (JavaExecutables, error) {
 	javaPaths := make(map[string]time.Time)
 	for _, javaLookUpPath := range *javaLookUpPaths {

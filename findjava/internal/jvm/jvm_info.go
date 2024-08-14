@@ -17,9 +17,22 @@ type JvmsInfos struct {
 	Jvms       map[string]*Jvm
 }
 
-func LoadJvmsInfos(metadataReader *MetadataReader, cachePath string, javaPaths *JavaExecutables) (JvmsInfos, error) {
+// LoadJvmsInfos returns a [JvmsInfos] object providing information of the different JVMs denoted by the
+// `javaExecutables` variable. The information of a given JVM are extracted thanks to the [MetadataReader] and
+// cached on disk (cache location: `cachePath`).
+//
+// Cache entries are automatically updated in case the following cases:
+//   - A new JVM not present in the cache is discovered -> metadata will be extracted and cached.
+//   - A known (to the cache) Java executable has a file modification time more recent than the cache entry's timestamp
+//     -> metadata will be extracted again and cached.
+//   - A JVM entry in the cache does not exist anymore on disk -> the cache entry is deleted (cleanup).
+//     Note that it might happen findjava is called with a configuration which only considers a sub-set of the cached
+//     JVMs. In this case, those entries won't be evicted from the cache, unless the file on disk has been deleted.
+//     This ensures cache entries are not aggressively removed from the cache when alternating calls to findjava with
+//     configurations referring to different `jvm.lookup.paths`.
+func LoadJvmsInfos(metadataReader *MetadataReader, cachePath string, javaExecutables *JavaExecutables) (JvmsInfos, error) {
 	jvmInfos := loadJvmsInfosFromCache(cachePath)
-	for javaPath, modTime := range javaPaths.JavaPaths {
+	for javaPath, modTime := range javaExecutables.JavaPaths {
 		if err := jvmInfos.Fetch(metadataReader, javaPath, modTime); err != nil {
 			return JvmsInfos{}, err
 		}
