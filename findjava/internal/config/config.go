@@ -63,15 +63,16 @@ func (cfg configEntry) String() string {
 	JvmVersionRange:    %s`, cfg.path, cfg.JvmLookupPaths, cfg.JvmVersionRange)
 }
 
-func loadConfig(defaultConfigPath string, name string, cacheDir string, metadataExtractorDir string) (*Config, error) {
+func loadConfig(systemConfigPath string, name string, cacheDir string, metadataExtractorDir string) (*Config, error) {
 	var configs []configEntry
-	configPaths := configPaths(name, defaultConfigPath)
+	configPaths := configPaths(name, systemConfigPath)
 	for _, path := range configPaths {
 		if _, err := os.Stat(path); err == nil {
 			if configEntry, err := loadConfigFromFile(path); err != nil {
 				return nil, err
 			} else {
 				configs = append(configs, configEntry)
+				break
 			}
 		} else {
 			log.Debug("Config file %s not found: %v", path, err)
@@ -79,6 +80,15 @@ func loadConfig(defaultConfigPath string, name string, cacheDir string, metadata
 	}
 	configs = append(configs, defaultConfigEntry)
 	return parseConfig(configs, cacheDir, metadataExtractorDir)
+}
+
+func configPaths(name string, systemConfigPath string) []string {
+	if name != defaultKey {
+		specificConfigPath := strings.TrimSuffix(systemConfigPath, ".conf") + "." + name + ".conf"
+		return []string{specificConfigPath, systemConfigPath}
+	} else {
+		return []string{systemConfigPath}
+	}
 }
 
 func parseConfig(configs []configEntry, cachePath string, extractorDir string) (*Config, error) {
@@ -164,15 +174,6 @@ func processLine(configEntry *configEntry, key string, value string) error {
 func initJvmVersionRange(configEntry *configEntry) {
 	if configEntry.JvmVersionRange == nil {
 		configEntry.JvmVersionRange = &jvm.VersionRange{}
-	}
-}
-
-func configPaths(name string, defaultConfigPath string) []string {
-	if name != defaultKey {
-		specificConfigPath := strings.TrimSuffix(defaultConfigPath, ".conf") + "." + name + ".conf"
-		return []string{specificConfigPath, defaultConfigPath}
-	} else {
-		return []string{defaultConfigPath}
 	}
 }
 

@@ -91,25 +91,22 @@ func TestLoadConfig(t *testing.T) {
 	}
 }
 
-func TestLoadConfigWithOverrides(t *testing.T) {
+func TestLoadKeySpecificConfig(t *testing.T) {
 	data := map[string]configEntry{
 		"abc": {
 			JvmLookupPaths: utils.ResolvePaths([]string{
 				"~/.sdkman/candidates/java",
 			}),
 			JvmVersionRange: &jvm.VersionRange{
-				Min: 8,
-				Max: 17,
+				Min: jvm.AllVersions,
+				Max: jvm.AllVersions,
 			},
 		},
 		"xyz": {
-			JvmLookupPaths: utils.ResolvePaths([]string{
-				"/usr/bin/java",
-				"/usr/lib/jvm",
-				"~/.sdkman/candidates/java",
-			}),
+			JvmLookupPaths: utils.ResolvePaths(defaultConfigEntry.JvmLookupPaths),
 			JvmVersionRange: &jvm.VersionRange{
-				Max: 11,
+				Min: 11,
+				Max: jvm.AllVersions,
 			},
 		},
 	}
