@@ -56,9 +56,7 @@ func main() {
 		log.Die(err)
 	}
 	rules := rules.SelectionRules(cfg, args.MinJavaVersion, args.MaxJavaVersion, args.Vendors, args.Programs)
-	if jvms := selection.Select(rules, &jvmInfos); len(jvms) > 0 {
-		jvm := jvms[0]
-		selection.LogJvmList("[SELECTED]", jvms[0:1])
+	if jvm := selection.Select(rules, &jvmInfos); jvm != nil {
 		if err := processOutput(args, jvm); err != nil {
 			log.Die(err)
 		}
@@ -67,7 +65,7 @@ func main() {
 	}
 }
 
-func processOutput(args *Args, jvm jvm.Jvm) error {
+func processOutput(args *Args, jvm *jvm.Jvm) error {
 	if args.OutputMode == outputModeJavaHome {
 		console.Writer.Printf("%s\n", jvm.JavaHome)
 		return nil
