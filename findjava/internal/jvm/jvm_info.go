@@ -2,7 +2,7 @@ package jvm
 
 import (
 	"encoding/json"
-	. "findjava/internal/discovery"
+	"findjava/internal/discovery"
 	"findjava/internal/log"
 	"findjava/internal/utils"
 	"os"
@@ -30,7 +30,7 @@ type JvmsInfos struct {
 //     JVMs. In this case, those entries won't be evicted from the cache, unless the file on disk has been deleted.
 //     This ensures cache entries are not aggressively removed from the cache when alternating calls to findjava with
 //     configurations referring to different `jvm.lookup.paths`.
-func LoadJvmsInfos(metadataReader *MetadataReader, cachePath string, javaExecutables *JavaExecutables) (JvmsInfos, error) {
+func LoadJvmsInfos(metadataReader *MetadataReader, cachePath string, javaExecutables *discovery.JavaExecutables) (JvmsInfos, error) {
 	jvmInfos := loadJvmsInfosFromCache(cachePath)
 	for javaPath, modTime := range javaExecutables.JavaPaths {
 		if err := jvmInfos.Fetch(metadataReader, javaPath, modTime); err != nil {

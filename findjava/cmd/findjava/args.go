@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	. "findjava/internal/jvm"
+	"findjava/internal/jvm"
 	"findjava/internal/log"
 	"findjava/internal/utils"
 	"flag"
@@ -39,9 +39,9 @@ func ParseArgs(commandArgs []string) (*Args, error) {
 		"The log level which is one of: debug, info, warn, error. Defaults to error")
 	cmd.StringVar(&args.ConfigKey, "config-key", "",
 		"If specified, will look for an optional config.<KEY>.json to load before loading the default configuration")
-	cmd.UintVar(&args.MinJavaVersion, "min-java-version", AllVersions,
+	cmd.UintVar(&args.MinJavaVersion, "min-java-version", jvm.AllVersions,
 		"The minimum (inclusive) Java Language Specification version the found JVMs should provide")
-	cmd.UintVar(&args.MaxJavaVersion, "max-java-version", AllVersions,
+	cmd.UintVar(&args.MaxJavaVersion, "max-java-version", jvm.AllVersions,
 		"The maximum (inclusive) Java Language Specification version the found JVMs should provide")
 	cmd.Var(&args.Vendors, "vendors",
 		"The vendors to filter on. If empty, no vendor filtering will be done")

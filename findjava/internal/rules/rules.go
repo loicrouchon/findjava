@@ -2,7 +2,7 @@ package rules
 
 import (
 	"findjava/internal/config"
-	. "findjava/internal/jvm"
+	"findjava/internal/jvm"
 	"findjava/internal/log"
 	"findjava/internal/utils"
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 type JvmSelectionRules struct {
 	// The version range in which the `java.specification.version` should be contained.
-	VersionRange *VersionRange
+	VersionRange *jvm.VersionRange
 	// A list of JVM vendors to filter on (no filtering if empty).
 	Vendors utils.List
 	// A list of executable binaries the JVM must provide in its `${java.home}/bin` folder. Defaults to `java`.
@@ -31,7 +31,7 @@ func (rules *JvmSelectionRules) String() string {
 
 // Matches returns `true` if [JvmSelectionRules.VersionRange], [JvmSelectionRules.Vendors], and
 // [JvmSelectionRules.Programs] rules are fulfilled.
-func (rules *JvmSelectionRules) Matches(jvm *Jvm) bool {
+func (rules *JvmSelectionRules) Matches(jvm *jvm.Jvm) bool {
 	if !rules.VersionRange.Matches(jvm.JavaSpecificationVersion) {
 		return false
 	}
@@ -44,7 +44,7 @@ func (rules *JvmSelectionRules) Matches(jvm *Jvm) bool {
 	return true
 }
 
-func (rules *JvmSelectionRules) matchVendor(jvm *Jvm) bool {
+func (rules *JvmSelectionRules) matchVendor(jvm *jvm.Jvm) bool {
 	if len(rules.Vendors) > 0 {
 		for _, vendor := range rules.Vendors {
 			if jvm.JavaVendor == vendor {
@@ -56,7 +56,7 @@ func (rules *JvmSelectionRules) matchVendor(jvm *Jvm) bool {
 	return true
 }
 
-func (rules *JvmSelectionRules) matchPrograms(jvm *Jvm) bool {
+func (rules *JvmSelectionRules) matchPrograms(jvm *jvm.Jvm) bool {
 	for _, program := range rules.Programs {
 		if program != "java" {
 			programPath := filepath.Join(jvm.JavaHome, "bin", program)
@@ -80,7 +80,7 @@ func (rules *JvmSelectionRules) matchPrograms(jvm *Jvm) bool {
 //   - considering configuration related constraints as soft constraints that should be fulfilled if possible.
 func SelectionRules(config *config.Config, minJavaVersion uint, maxJavaVersion uint, vendors utils.List, programs utils.List) *JvmSelectionRules {
 	rules := &JvmSelectionRules{}
-	rules.VersionRange = &VersionRange{
+	rules.VersionRange = &jvm.VersionRange{
 		Min: minJavaVersion,
 		Max: maxJavaVersion,
 	}

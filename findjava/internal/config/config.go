@@ -2,7 +2,7 @@ package config
 
 import (
 	"bufio"
-	. "findjava/internal/jvm"
+	"findjava/internal/jvm"
 	"findjava/internal/log"
 	"findjava/internal/utils"
 	"fmt"
@@ -25,7 +25,7 @@ var defaultConfigEntry = ConfigEntry{
 		"~/.sdkman/candidates/java",
 		"$HOMEBREW_CELLAR/openjdk",
 	},
-	JvmVersionRange: &VersionRange{
+	JvmVersionRange: &jvm.VersionRange{
 		Min: 0,
 		Max: 0,
 	},
@@ -35,7 +35,7 @@ type Config struct {
 	JvmsMetadataExtractorPath string
 	JvmsMetadataCachePath     string
 	JvmsLookupPaths           []string
-	JvmVersionRange           VersionRange
+	JvmVersionRange           jvm.VersionRange
 }
 
 func (cfg *Config) String() string {
@@ -49,7 +49,7 @@ func (cfg *Config) String() string {
 type ConfigEntry struct {
 	path            string
 	JvmLookupPaths  []string
-	JvmVersionRange *VersionRange
+	JvmVersionRange *jvm.VersionRange
 }
 
 func (cfg ConfigEntry) String() string {
@@ -138,7 +138,7 @@ func processLine(configEntry *ConfigEntry, key string, value string) error {
 		configEntry.JvmLookupPaths = paths
 	} else if key == "java.specification.version.min" {
 		initJvmVersionRange(configEntry)
-		version, err := ParseJavaSpecificationVersion(value)
+		version, err := jvm.ParseJavaSpecificationVersion(value)
 		if err != nil {
 			return err
 		}
@@ -146,7 +146,7 @@ func processLine(configEntry *ConfigEntry, key string, value string) error {
 
 	} else if key == "java.specification.version.max" {
 		initJvmVersionRange(configEntry)
-		version, err := ParseJavaSpecificationVersion(value)
+		version, err := jvm.ParseJavaSpecificationVersion(value)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func processLine(configEntry *ConfigEntry, key string, value string) error {
 
 func initJvmVersionRange(configEntry *ConfigEntry) {
 	if configEntry.JvmVersionRange == nil {
-		configEntry.JvmVersionRange = &VersionRange{}
+		configEntry.JvmVersionRange = &jvm.VersionRange{}
 	}
 }
 
@@ -184,13 +184,13 @@ func jvmsLookupPaths(configs []ConfigEntry) ([]string, error) {
 	return nil, fmt.Errorf("no JVMs lookup path defined in configuration files %v\n", paths(configs))
 }
 
-func jvmVersionRange(configs []ConfigEntry) (VersionRange, error) {
+func jvmVersionRange(configs []ConfigEntry) (jvm.VersionRange, error) {
 	for _, cfg := range configs {
 		if cfg.JvmVersionRange != nil {
 			return *cfg.JvmVersionRange, nil
 		}
 	}
-	return VersionRange{}, fmt.Errorf("no version range defined in configuration files %v\n", paths(configs))
+	return jvm.VersionRange{}, fmt.Errorf("no version range defined in configuration files %v\n", paths(configs))
 }
 
 func paths(configs []ConfigEntry) []string {

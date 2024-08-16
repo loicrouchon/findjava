@@ -1,7 +1,7 @@
 package config
 
 import (
-	. "findjava/internal/jvm"
+	"findjava/internal/jvm"
 	"findjava/internal/utils"
 	"findjava/test"
 	"fmt"
@@ -43,7 +43,7 @@ func TestLoadConfig(t *testing.T) {
 		"~/.sdkman/candidates/java",
 		"$HOMEBREW_CELLAR/openjdk",
 	})
-	defaultJvmVersionRange := &VersionRange{
+	defaultJvmVersionRange := &jvm.VersionRange{
 		Min: 0,
 		Max: 0,
 	}
@@ -66,7 +66,7 @@ func TestLoadConfig(t *testing.T) {
 		},
 		"test-resources/min-jvm-version.conf": {
 			JvmLookupPaths: defaultJvmLookupPath,
-			JvmVersionRange: &VersionRange{
+			JvmVersionRange: &jvm.VersionRange{
 				Min: 8,
 			},
 		},
@@ -76,7 +76,7 @@ func TestLoadConfig(t *testing.T) {
 				"/usr/lib/jvm",
 				"~/.sdkman/candidates/java",
 			}),
-			JvmVersionRange: &VersionRange{
+			JvmVersionRange: &jvm.VersionRange{
 				Min: 8,
 				Max: 17,
 			},
@@ -97,7 +97,7 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 			JvmLookupPaths: utils.ResolvePaths([]string{
 				"~/.sdkman/candidates/java",
 			}),
-			JvmVersionRange: &VersionRange{
+			JvmVersionRange: &jvm.VersionRange{
 				Min: 8,
 				Max: 17,
 			},
@@ -108,7 +108,7 @@ func TestLoadConfigWithOverrides(t *testing.T) {
 				"/usr/lib/jvm",
 				"~/.sdkman/candidates/java",
 			}),
-			JvmVersionRange: &VersionRange{
+			JvmVersionRange: &jvm.VersionRange{
 				Max: 11,
 			},
 		},
