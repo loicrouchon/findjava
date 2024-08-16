@@ -10,15 +10,17 @@ import (
 )
 
 type JavaExecutables struct {
+	// A map where keys are the absolute java executables path with all symbolic links resolved and keys are the
+	// modification timestamp of the java executable.
 	JavaPaths map[string]time.Time
 }
 
-type JavaExecutable struct {
+type javaExecutable struct {
 	path      string
 	timestamp time.Time
 }
 
-func (javaExecutable *JavaExecutable) String() string {
+func (javaExecutable *javaExecutable) String() string {
 	return fmt.Sprintf(`{timestamp: %-30s, path: %s}`, javaExecutable.timestamp, javaExecutable.path)
 }
 
@@ -53,35 +55,35 @@ func FindAllJavaExecutables(javaLookUpPaths *[]string) (JavaExecutables, error) 
 	return JavaExecutables{JavaPaths: javaPaths}, nil
 }
 
-func findJavaExecutables(lookUpPath string) ([]JavaExecutable, error) {
+func findJavaExecutables(lookUpPath string) ([]javaExecutable, error) {
 	if path, err := filepath.EvalSymlinks(lookUpPath); err == nil {
 		if fileInfo, err := os.Stat(path); err == nil {
 			fileMode := fileInfo.Mode()
 			if fileMode.IsRegular() {
-				return javaExecutable(path, fileInfo), nil
+				return findSingleJavaExecutable(path, fileInfo), nil
 			} else if fileInfo.Mode().IsDir() {
-				return javaExecutablesForEachJvmDirectory(path)
+				return findJavaExecutablesForEachJvmDirectory(path)
 			} else {
 				return nil, fmt.Errorf("file %s (symlinked from %s) cannot be processed :(", path, lookUpPath)
 			}
 		}
 	}
-	return []JavaExecutable{}, nil
+	return []javaExecutable{}, nil
 }
 
-func javaExecutable(path string, fileInfo os.FileInfo) []JavaExecutable {
+func findSingleJavaExecutable(path string, fileInfo os.FileInfo) []javaExecutable {
 	if fileInfo.Mode()&0111 != 0 {
-		return []JavaExecutable{{
+		return []javaExecutable{{
 			path:      path,
 			timestamp: fileInfo.ModTime(),
 		}}
 	} else {
 		log.Debug("  File %s is not executable", path)
-		return []JavaExecutable{}
+		return []javaExecutable{}
 	}
 }
 
-func javaExecutablesForEachJvmDirectory(directory string) ([]JavaExecutable, error) {
+func findJavaExecutablesForEachJvmDirectory(directory string) ([]javaExecutable, error) {
 	if java, err := findJavaExecutables(filepath.Join(directory, "bin", "java")); len(java) == 1 {
 		return nil, err
 	}
@@ -95,7 +97,7 @@ func javaExecutablesForEachJvmDirectory(directory string) ([]JavaExecutable, err
 	if err != nil {
 		return nil, err
 	}
-	var javaPaths []JavaExecutable
+	var javaPaths []javaExecutable
 	for _, file := range files {
 		if !file.Mode().IsRegular() {
 			path := filepath.Join(directory, file.Name(), "bin", "java")
