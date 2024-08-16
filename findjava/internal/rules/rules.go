@@ -11,9 +11,13 @@ import (
 )
 
 type JvmSelectionRules struct {
-	VersionRange   *VersionRange
-	Vendors        utils.List
-	Programs       utils.List
+	// The version range in which the `java.specification.version` should be contained.
+	VersionRange *VersionRange
+	// A list of JVM vendors to filter on (no filtering if empty).
+	Vendors utils.List
+	// A list of executable binaries the JVM must provide in its `${java.home}/bin` folder. Defaults to `java`.
+	Programs utils.List
+	// The preferred rules coming from the configuration to be applied if possible.
 	PreferredRules *JvmSelectionRules
 }
 
@@ -25,6 +29,8 @@ func (rules *JvmSelectionRules) String() string {
     PreferredRules: %v`, rules.VersionRange, rules.Vendors, rules.Programs, rules.PreferredRules)
 }
 
+// Matches returns `true` if [JvmSelectionRules.VersionRange], [JvmSelectionRules.Vendors], and
+// [JvmSelectionRules.Programs] rules are fulfilled.
 func (rules *JvmSelectionRules) Matches(jvm *Jvm) bool {
 	if !rules.VersionRange.Matches(jvm.JavaSpecificationVersion) {
 		return false
@@ -68,6 +74,10 @@ func (rules *JvmSelectionRules) matchPrograms(jvm *Jvm) bool {
 	return true
 }
 
+// SelectionRules builds a [JvmSelectionRules] by:
+//
+//   - considering selection criteria given on the command line as strong constraints that must be fulfilled
+//   - considering configuration related constraints as soft constraints that should be fulfilled if possible.
 func SelectionRules(config *config.Config, minJavaVersion uint, maxJavaVersion uint, vendors utils.List, programs utils.List) *JvmSelectionRules {
 	rules := &JvmSelectionRules{}
 	rules.VersionRange = &VersionRange{
