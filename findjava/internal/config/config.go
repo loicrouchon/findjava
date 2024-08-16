@@ -13,7 +13,7 @@ import (
 
 const defaultKey = ""
 
-var defaultConfigEntry = ConfigEntry{
+var defaultConfigEntry = configEntry{
 	path: "<DEFAULT>",
 	JvmLookupPaths: []string{
 		"$JAVA_HOME/bin/java",
@@ -32,10 +32,14 @@ var defaultConfigEntry = ConfigEntry{
 }
 
 type Config struct {
+	// The absolute path to the directory in which the JvmMetadataExtractor is located.
 	JvmsMetadataExtractorPath string
-	JvmsMetadataCachePath     string
-	JvmsLookupPaths           []string
-	JvmVersionRange           jvm.VersionRange
+	// The absolute path to the directory in which JVMs metadata will be cached.
+	JvmsMetadataCachePath string
+	// The array of paths in which JVMs will be looked for.
+	JvmsLookupPaths []string
+	// The preferred version range to filter potential candidates.
+	JvmVersionRange jvm.VersionRange
 }
 
 func (cfg *Config) String() string {
@@ -46,13 +50,13 @@ func (cfg *Config) String() string {
 	JvmVersionRange:                %s`, cfg.JvmsMetadataExtractorPath, cfg.JvmsMetadataCachePath, cfg.JvmsLookupPaths, &cfg.JvmVersionRange)
 }
 
-type ConfigEntry struct {
+type configEntry struct {
 	path            string
 	JvmLookupPaths  []string
 	JvmVersionRange *jvm.VersionRange
 }
 
-func (cfg ConfigEntry) String() string {
+func (cfg configEntry) String() string {
 	return fmt.Sprintf(`config entry:
 	path:               %s
 	JvmLookupPaths:     %v
@@ -60,7 +64,7 @@ func (cfg ConfigEntry) String() string {
 }
 
 func loadConfig(defaultConfigPath string, name string, cacheDir string, metadataExtractorDir string) (*Config, error) {
-	var configs []ConfigEntry
+	var configs []configEntry
 	configPaths := configPaths(name, defaultConfigPath)
 	for _, path := range configPaths {
 		if _, err := os.Stat(path); err == nil {
@@ -77,7 +81,7 @@ func loadConfig(defaultConfigPath string, name string, cacheDir string, metadata
 	return parseConfig(configs, cacheDir, metadataExtractorDir)
 }
 
-func parseConfig(configs []ConfigEntry, cachePath string, extractorDir string) (*Config, error) {
+func parseConfig(configs []configEntry, cachePath string, extractorDir string) (*Config, error) {
 	log.Debug("Config entries: %v", configs)
 	lookupPaths, err := jvmsLookupPaths(configs)
 	if err != nil {
@@ -97,9 +101,9 @@ func parseConfig(configs []ConfigEntry, cachePath string, extractorDir string) (
 	return &config, nil
 }
 
-func loadConfigFromFile(path string) (ConfigEntry, error) {
+func loadConfigFromFile(path string) (configEntry, error) {
 	log.Debug("Loading config from %s", path)
-	configEntry := ConfigEntry{
+	configEntry := configEntry{
 		path: path,
 	}
 	file, err := os.Open(path)
@@ -129,7 +133,7 @@ func loadConfigFromFile(path string) (ConfigEntry, error) {
 	return configEntry, err
 }
 
-func processLine(configEntry *ConfigEntry, key string, value string) error {
+func processLine(configEntry *configEntry, key string, value string) error {
 	if key == "jvm.lookup.paths" {
 		var paths []string
 		for _, p := range strings.Split(value, ",") {
@@ -157,7 +161,7 @@ func processLine(configEntry *ConfigEntry, key string, value string) error {
 	return nil
 }
 
-func initJvmVersionRange(configEntry *ConfigEntry) {
+func initJvmVersionRange(configEntry *configEntry) {
 	if configEntry.JvmVersionRange == nil {
 		configEntry.JvmVersionRange = &jvm.VersionRange{}
 	}
@@ -172,7 +176,7 @@ func configPaths(name string, defaultConfigPath string) []string {
 	}
 }
 
-func jvmsLookupPaths(configs []ConfigEntry) ([]string, error) {
+func jvmsLookupPaths(configs []configEntry) ([]string, error) {
 	for _, cfg := range configs {
 		if len(cfg.JvmLookupPaths) > 0 {
 			resolvedPaths := utils.ResolvePaths(cfg.JvmLookupPaths)
@@ -184,7 +188,7 @@ func jvmsLookupPaths(configs []ConfigEntry) ([]string, error) {
 	return nil, fmt.Errorf("no JVMs lookup path defined in configuration files %v\n", paths(configs))
 }
 
-func jvmVersionRange(configs []ConfigEntry) (jvm.VersionRange, error) {
+func jvmVersionRange(configs []configEntry) (jvm.VersionRange, error) {
 	for _, cfg := range configs {
 		if cfg.JvmVersionRange != nil {
 			return *cfg.JvmVersionRange, nil
@@ -193,7 +197,7 @@ func jvmVersionRange(configs []ConfigEntry) (jvm.VersionRange, error) {
 	return jvm.VersionRange{}, fmt.Errorf("no version range defined in configuration files %v\n", paths(configs))
 }
 
-func paths(configs []ConfigEntry) []string {
+func paths(configs []configEntry) []string {
 	var paths []string
 	for _, cfg := range configs {
 		paths = append(paths, cfg.path)

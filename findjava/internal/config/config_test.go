@@ -47,7 +47,7 @@ func TestLoadConfig(t *testing.T) {
 		Min: 0,
 		Max: 0,
 	}
-	data := map[string]ConfigEntry{
+	data := map[string]configEntry{
 		"test-resources/missing.conf": {
 			JvmLookupPaths:  defaultJvmLookupPath,
 			JvmVersionRange: defaultJvmVersionRange,
@@ -92,7 +92,7 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestLoadConfigWithOverrides(t *testing.T) {
-	data := map[string]ConfigEntry{
+	data := map[string]configEntry{
 		"abc": {
 			JvmLookupPaths: utils.ResolvePaths([]string{
 				"~/.sdkman/candidates/java",
