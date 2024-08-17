@@ -38,9 +38,11 @@ func (jvm *Jvm) String() string {
 timestamp: %s
 java.home: %s
 java.specification.version: %d
+java.vendor: %s
 `,
 		jvm.javaPath,
 		jvm.FetchedAt,
 		jvm.JavaHome,
-		jvm.JavaSpecificationVersion)
+		jvm.JavaSpecificationVersion,
+		jvm.JavaVendor)
 }
