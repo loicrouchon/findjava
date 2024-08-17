@@ -16,10 +16,11 @@ type JvmsInfos struct {
 	cachePath string
 	// True if the cache is dirty and needs to be updated
 	dirtyCache bool
-	// A map where keys are java executable absolute path and values a boolean indicating whether their metadata have
+	// A map where keys are java executable absolute paths and values a boolean indicating whether their metadata have
 	// been fetched or not.
 	fetched map[string]bool
-	Jvms    map[string]*Jvm
+	// A map where keys are java executable absolute paths and values the associated [Jvm] metadata.
+	Jvms map[string]*Jvm
 }
 
 // LoadJvmsInfos returns a [JvmsInfos] object providing information of the different JVMs denoted by the

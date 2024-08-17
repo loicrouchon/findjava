@@ -5,13 +5,20 @@ import (
 	"time"
 )
 
+// Jvm represents a JVM and its associated metadata as extracted by the [MetadataReader].
 type Jvm struct {
-	javaPath                 string
-	JavaHome                 string
+	// The absolute path to the java executable.
+	javaPath string
+	// The absolute path to the `java.home` directory.
+	JavaHome string
+	// The `java.specification.version`
 	JavaSpecificationVersion uint
-	JavaVendor               string
-	FetchedAt                time.Time
-	SystemProperties         map[string]string
+	// The vendor
+	JavaVendor string
+	// The time at which the metadata were read
+	FetchedAt time.Time
+	// The system properties extracted by the [MetadataReader]
+	SystemProperties map[string]string
 }
 
 func (jvm *Jvm) rebuild() error {
