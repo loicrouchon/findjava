@@ -10,11 +10,16 @@ import (
 	"time"
 )
 
+// JvmsInfos is a container type for all detected JVMs
 type JvmsInfos struct {
-	path       string
+	// The absolute path of the cache file
+	cachePath string
+	// True if the cache is dirty and needs to be updated
 	dirtyCache bool
-	fetched    map[string]bool
-	Jvms       map[string]*Jvm
+	// A map where keys are java executable absolute path and values a boolean indicating whether their metadata have
+	// been fetched or not.
+	fetched map[string]bool
+	Jvms    map[string]*Jvm
 }
 
 // LoadJvmsInfos returns a [JvmsInfos] object providing information of the different JVMs denoted by the
@@ -37,13 +42,16 @@ func LoadJvmsInfos(metadataReader *MetadataReader, cachePath string, javaExecuta
 			return JvmsInfos{}, err
 		}
 	}
-	_ = jvmInfos.Save()
+	jvmInfos.evictOutdatedEntriesFromCache()
+	if err := jvmInfos.Save(); err != nil {
+		log.Warn(err)
+	}
 	return jvmInfos, nil
 }
 
 func loadJvmsInfosFromCache(path string) JvmsInfos {
 	jvmsInfos := JvmsInfos{
-		path:       path,
+		cachePath:  path,
 		dirtyCache: false,
 		fetched:    make(map[string]bool),
 		Jvms:       make(map[string]*Jvm),
@@ -100,21 +108,19 @@ func (jvms *JvmsInfos) doFetch(metadataReader *MetadataReader, javaPath string) 
 	return nil
 }
 
-func (jvms *JvmsInfos) Save() error {
+func (jvms *JvmsInfos) evictOutdatedEntriesFromCache() {
 	for javaPath, jvmInfo := range jvms.Jvms {
 		if value, found := jvms.fetched[javaPath]; !found || !value {
-			if fileInfo, err := os.Stat(javaPath); err == nil {
-				if fileInfo.ModTime().After(jvmInfo.FetchedAt) {
-					if err := jvms.doFetch(nil, javaPath); err != nil {
-						return err
-					}
-				}
-			} else {
+			if fileInfo, err := os.Stat(javaPath); err != nil || fileInfo.ModTime().After(jvmInfo.FetchedAt) {
 				delete(jvms.Jvms, javaPath)
+				log.Debug("evicting cache entry for JVM %s", javaPath)
 				jvms.dirtyCache = true
 			}
 		}
 	}
+}
+
+func (jvms *JvmsInfos) Save() error {
 	if jvms.dirtyCache {
 		return writeToJson(jvms)
 	}
@@ -122,16 +128,16 @@ func (jvms *JvmsInfos) Save() error {
 }
 
 func writeToJson(jvmInfos *JvmsInfos) error {
-	log.Debug("Writing JVMs infos cache to %s", jvmInfos.path)
+	log.Debug("Writing JVMs infos cache to %s", jvmInfos.cachePath)
 	file, err := json.MarshalIndent(jvmInfos, "", "  ")
 	if err != nil {
 		return err
 	}
-	if err := utils.CreateDirectory(filepath.Dir(jvmInfos.path)); err != nil {
-		return log.WrapErr(err, "unable to create directory to host cache %s", jvmInfos.path)
+	if err := utils.CreateDirectory(filepath.Dir(jvmInfos.cachePath)); err != nil {
+		return log.WrapErr(err, "unable to create directory to host cache %s", jvmInfos.cachePath)
 	}
-	if err := utils.WriteFile(jvmInfos.path, file, 0644); err != nil {
-		return log.WrapErr(err, "unable to write to file %s", jvmInfos.path)
+	if err := utils.WriteFile(jvmInfos.cachePath, file, 0644); err != nil {
+		return log.WrapErr(err, "unable to write to file %s", jvmInfos.cachePath)
 	}
 	return nil
 }
