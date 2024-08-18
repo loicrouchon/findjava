@@ -15,7 +15,7 @@ func (f *MetadataReader) fetchJvmInfo(javaPath string) (*Jvm, error) {
 	cmd := exec.Command(javaPath, "-cp", f.Classpath, "JvmMetadataExtractor")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, log.WrapErr(err, "fail to call %s ", javaPath)
+		return nil, log.WrapErr(err, "fail to call %s with args [%s]", javaPath, strings.Join(cmd.Args[1:], ", "))
 	}
 	lines := strings.Split(string(output), "\n")
 	systemProperties := make(map[string]string)

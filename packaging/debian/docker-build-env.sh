@@ -21,5 +21,3 @@ cat gpg/*.key  | gpg --import
 
 bash
 """
-
-

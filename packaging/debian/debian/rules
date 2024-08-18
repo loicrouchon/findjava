@@ -22,6 +22,6 @@ override_dh_auto_install:
 	mkdir -p $(DESTDIR)/usr/share/findjava/metadata-extractor/
 	mkdir -p $(DESTDIR)/etc/findjava
 	ln -s ../../usr/share/findjava/findjava $(DESTDIR)/usr/bin/findjava
-	install -p -m 755 $(BUILD_DIR)/go/findjava $(DESTDIR)/usr/share/findjava/findjava
-	install -p -m 644 $(BUILD_DIR)/classes/JvmMetadataExtractor.class $(DESTDIR)/usr/share/findjava/metadata-extractor/JvmMetadataExtractor.class
+	install -p -m 755 $(BUILD_DIR)/dist/findjava $(DESTDIR)/usr/share/findjava/findjava
+	install -p -m 644 $(BUILD_DIR)/dist/metadata-extractor/JvmMetadataExtractor.class $(DESTDIR)/usr/share/findjava/metadata-extractor/JvmMetadataExtractor.class
 	install -p -m 644 $(CURDIR)/packaging/debian/config.conf $(DESTDIR)/etc/findjava

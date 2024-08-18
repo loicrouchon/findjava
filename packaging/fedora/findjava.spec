@@ -29,8 +29,8 @@ GO_LD_FLAGS='-linkmode=external' GO_TAGS="-tags linux" make test build
 find .
 mkdir -p %{buildroot}/usr/bin %{buildroot}/usr/share/%{name} %{buildroot}/usr/share/%{name}/metadata-extractor %{buildroot}/etc/%{name}
 ln -s ../share/%{name}/%{name} %{buildroot}/usr/bin/%{name}
-install -p -m 755 %{distdir}/go/%{name} %{buildroot}/usr/share/%{name}/%{name}
-install -p -m 644 %{distdir}/classes/JvmMetadataExtractor.class %{buildroot}/usr/share/%{name}/metadata-extractor/JvmMetadataExtractor.class
+install -p -m 755 %{distdir}/dist/%{name} %{buildroot}/usr/share/%{name}/%{name}
+install -p -m 644 %{distdir}/dist/metadata-extractor/JvmMetadataExtractor.class %{buildroot}/usr/share/%{name}/metadata-extractor/JvmMetadataExtractor.class
 install -p -m 644 packaging/fedora/config.conf %{buildroot}/etc/%{name}/config.conf
 
 %files

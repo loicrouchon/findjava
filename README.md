@@ -193,8 +193,37 @@ The application can then be built with:
 make
 ```
 
-Once built, you can run it with
+> Be aware of the default configuration when building the application.
+> By default, a development build will be created (configuration from [main.go](findjava/cmd/findjava/main.go)).
+> This can be changed to one of the following tags: [darwin](findjava/linker/standalone_macos.go),
+> [standalone_linux](findjava/linker/standalone_linux.go), [debian](findjava/linker/debian.go).
+>
+> To do so, set the `GO_TAGS` environment variable before calling `make` as follows: `GO_TAGS="-tags <TAG>"`.
+>
+> Example to build a binary customized for debian:
+>
+> ```shell
+> GO_TAGS="-tags debian" make
+> ```
+>
+> Another alternative is to override individual settings using go build -ldflags by setting the `GO_LD_FLAGS`
+> environment variable before calling `make`. For example:
+>
+> ```shell
+> GO_LD_FLAGS="-X 'findjava/linker.MetadataExtractorDir=/usr/share/findjava/metadata-extractor'" make
+> ```
+>
+> Note that both approaches could be combined. The following example will use the `standalone_linux` configuration
+> and patch the `linker.MetadataExtractorDir` variable:
+>
+> ```shell
+> GO_TAGS="-tags standalone_linux" GO_LD_FLAGS="-X 'findjava/linker.MetadataExtractorDir=/usr/share/findjava/metadata-extractor'" make
+> ```
+>
+> Full documentation about the overridable variables is available in the [linker package documentation](findjava/linker/doc.go).
+
+Once built, you can run it with:
 
 ```shell
-./build/go/findjava
+./build/dist/findjava
 ```
