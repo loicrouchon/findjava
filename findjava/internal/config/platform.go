@@ -24,14 +24,14 @@ func (p *Platform) String() string {
 }
 
 func (p *Platform) LoadConfig(key string) (*Config, error) {
-	err := p.setSelfPath()
+	err := p.Resolve()
 	if err != nil {
 		return nil, err
 	}
 	return loadConfig(filepath.Join(p.ConfigDir, "config.conf"), key, p.CacheDir, p.MetadataExtractorDir)
 }
 
-func (p *Platform) setSelfPath() error {
+func (p *Platform) Resolve() error {
 	self, err := os.Executable()
 	if err != nil {
 		return log.WrapErr(err, "unable to resolve findjava self location")

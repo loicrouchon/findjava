@@ -8,16 +8,11 @@ import (
 	"findjava/internal/log"
 	"findjava/internal/rules"
 	"findjava/internal/selection"
+	"findjava/linker"
 	"fmt"
 	"os"
 	"path/filepath"
 )
-
-var platform = config.Platform{
-	ConfigDir:            "../",
-	CacheDir:             "../",
-	MetadataExtractorDir: "./metadata-extractor/",
-}
 
 var Version = "dev"
 
@@ -26,8 +21,14 @@ func main() {
 	if err != nil {
 		log.Die(err)
 	}
+	platform := config.Platform{
+		ConfigDir:            linker.ConfigDir,
+		CacheDir:             linker.CacheDir,
+		MetadataExtractorDir: linker.MetadataExtractorDir,
+	}
 	if args.version {
 		console.Writer.Printf("findjava %s\n", Version)
+		_ = platform.Resolve() // Prints platform information at debug level
 		return
 	}
 	if args == nil {
