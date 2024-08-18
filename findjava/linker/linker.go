@@ -20,19 +20,19 @@ var CacheDir = defaultCacheDir
 var MetadataExtractorDir = defaultMetadataExtractorDir
 
 func setConfigDir(value string) {
-	if ConfigDir == defaultConfigDir {
-		ConfigDir = value
-	}
+	setIfNotOverridden(&ConfigDir, defaultConfigDir, value)
 }
 
 func setCacheDir(value string) {
-	if CacheDir == defaultCacheDir {
-		CacheDir = value
-	}
+	setIfNotOverridden(&CacheDir, defaultCacheDir, value)
 }
 
 func setMetadataExtractorDir(value string) {
-	if MetadataExtractorDir == defaultMetadataExtractorDir {
-		MetadataExtractorDir = value
+	setIfNotOverridden(&MetadataExtractorDir, defaultMetadataExtractorDir, value)
+}
+
+func setIfNotOverridden(variable *string, defaultValue string, newValue string) {
+	if *variable == defaultValue {
+		*variable = newValue
 	}
 }
